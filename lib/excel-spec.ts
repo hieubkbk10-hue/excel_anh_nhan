@@ -14,6 +14,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'kpi-contract',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Giá trị hợp đồng'
+    },
     metrics: {
       current: 'N17',
       target: 'L17'
@@ -22,6 +25,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'kpi-revenue',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Giá trị doanh thu'
+    },
     metrics: {
       current: 'Q34',
       target: 'N34'

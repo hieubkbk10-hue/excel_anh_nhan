@@ -7,7 +7,8 @@ const EXCEL_URL = '/Hop dong - Doanh thu.xlsx';
 export async function loadExcelData(): Promise<ExcelData> {
   const workbook = await loadWorkbook(EXCEL_URL);
   const charts = buildCharts(workbook, EXCEL_CHART_SPECS);
-  return { charts };
+  const texts = buildTexts(EXCEL_CHART_SPECS);
+  return { charts, texts };
 }
 
 async function loadWorkbook(url: string): Promise<XLSX.WorkBook> {
@@ -25,6 +26,14 @@ function buildCharts(workbook: XLSX.WorkBook, specs: ExcelChartSpec[]): ExcelDat
     charts[spec.id] = evaluateChart(spec, workbook);
   }
   return charts;
+}
+
+function buildTexts(specs: ExcelChartSpec[]): ExcelData['texts'] {
+  const texts = {} as ExcelData['texts'];
+  for (const spec of specs) {
+    texts[spec.id] = spec.texts ?? {};
+  }
+  return texts;
 }
 
 function evaluateChart(spec: ExcelChartSpec, workbook: XLSX.WorkBook): Record<string, number> {

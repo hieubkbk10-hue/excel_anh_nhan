@@ -35,10 +35,12 @@ export interface ExcelChartSpec {
   id: ExcelChartId;
   sheet?: string;
   metrics: Record<string, string>;
+  texts?: Record<string, string>;
 }
 
 export interface ExcelData {
   charts: Record<ExcelChartId, Record<string, number>>;
+  texts: Record<ExcelChartId, Record<string, string>>;
 }
 
 export interface DonutDataItem {

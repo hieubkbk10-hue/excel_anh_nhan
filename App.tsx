@@ -36,6 +36,7 @@ const App: React.FC = () => {
     if (!excelData) return null;
 
     const charts = excelData.charts;
+    const texts = excelData.texts;
     const headerMetrics = charts['header-plans'];
     const kpiContractMetrics = charts['kpi-contract'];
     const kpiRevenueMetrics = charts['kpi-revenue'];
@@ -48,6 +49,8 @@ const App: React.FC = () => {
 
     const getMetric = (metrics: Record<string, number> | undefined, key: string) =>
       metrics?.[key] ?? 0;
+    const getText = (chartId: keyof typeof texts, key: string, fallback: string) =>
+      texts?.[chartId]?.[key] ?? fallback;
 
     const headerContractPlan = getMetric(headerMetrics, 'contractPlan');
     const headerRevenuePlan = getMetric(headerMetrics, 'revenuePlan');
@@ -158,7 +161,9 @@ const App: React.FC = () => {
       contractForecastPercent,
       revenueForecastPercent,
       contractDonutTotal: getMetric(donutContractMetrics, 'total'),
-      revenueDonutTotal: getMetric(donutRevenueMetrics, 'total')
+      revenueDonutTotal: getMetric(donutRevenueMetrics, 'total'),
+      kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
+      kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu')
     };
   }, [excelData]);
 
@@ -209,7 +214,7 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="h-full">
                 <KPICard 
-                    title="Giá trị hợp đồng"
+                    title={derivedData.kpiContractTitle}
                     currentValue={derivedData.kpiContractMetrics?.current ?? 0}
                     targetValue={derivedData.kpiContractMetrics?.target ?? 0}
                     icon="file"
@@ -220,7 +225,7 @@ const App: React.FC = () => {
             </div>
             <div className="h-full">
                 <KPICard 
-                    title="Giá trị doanh thu"
+                    title={derivedData.kpiRevenueTitle}
                     currentValue={derivedData.kpiRevenueMetrics?.current ?? 0}
                     targetValue={derivedData.kpiRevenueMetrics?.target ?? 0}
                     icon="dollar"
