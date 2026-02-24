@@ -6,9 +6,10 @@ import { TrendingUp } from 'lucide-react';
 
 interface OpportunityChartProps {
   data: OpportunityChartItem[];
+  title: string;
 }
 
-const OpportunityChart: React.FC<OpportunityChartProps> = ({ data }) => {
+const OpportunityChart: React.FC<OpportunityChartProps> = ({ data, title }) => {
   const formatValue = (val: number) => (val ? val.toLocaleString('vi-VN') : '');
   const tickFormatter = (value: string) => {
     const item = data.find((entry) => entry.label === value);
@@ -28,7 +29,7 @@ const OpportunityChart: React.FC<OpportunityChartProps> = ({ data }) => {
                 <TrendingUp size={18} />
             </div>
             <CardTitle className="text-base font-semibold uppercase text-slate-700">
-                Nguồn cơ hội trong năm (Tr)
+                {title}
             </CardTitle>
         </div>
       </CardHeader>

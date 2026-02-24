@@ -167,7 +167,8 @@ const App: React.FC = () => {
       headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
       forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
       groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)'),
-      groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)')
+      groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)'),
+      opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)')
     };
   }, [excelData]);
 
@@ -310,7 +311,7 @@ const App: React.FC = () => {
         {/* BOTTOM SECTIONS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="col-span-1 lg:col-span-3">
-                 <OpportunityChart data={derivedData.opportunityData} />
+                 <OpportunityChart data={derivedData.opportunityData} title={derivedData.opportunityTitle} />
             </div>
             <DonutSection
               contractData={derivedData.contractDonutData}

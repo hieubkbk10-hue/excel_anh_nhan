@@ -72,17 +72,20 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
       title: 'Doanh thu theo nhóm (Tr)'
     },
     metrics: {
-      itoPlan: 'C34',
-      itoActual: 'E34',
-      uniPlan: 'F34',
-      uniActual: 'I34',
-      g2bPlan: 'J34',
-      g2bActual: 'M34'
+      itoPlan: 'C35',
+      itoActual: 'E35',
+      uniPlan: 'F35',
+      uniActual: 'I35',
+      g2bPlan: 'J35',
+      g2bActual: 'M35'
     }
   },
   {
     id: 'opportunity',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Nguồn cơ hội trong năm (Tr)'
+    },
     metrics: {
       itoNewContract: 'D17',
       itoRevenueSigned: '0',
