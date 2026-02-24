@@ -53,6 +53,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'group-contract',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Hợp đồng theo nhóm (Tr)'
+    },
     metrics: {
       itoPlan: 'C17',
       itoActual: 'E17',

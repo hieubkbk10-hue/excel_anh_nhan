@@ -165,7 +165,8 @@ const App: React.FC = () => {
       kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
       headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
-      forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm')
+      forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
+      groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)')
     };
   }, [excelData]);
 
@@ -294,7 +295,7 @@ const App: React.FC = () => {
         {/* MIDDLE CHART ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <GroupAnalysis 
-                title="Hợp đồng theo nhóm (Tr)" 
+                title={derivedData.groupContractTitle} 
                 data={derivedData.contractGroupData} 
                 type="contract"
             />
