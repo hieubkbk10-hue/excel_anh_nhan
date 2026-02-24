@@ -81,13 +81,17 @@ interface DonutSectionProps {
   revenueData: DonutDataItem[];
   contractTotal: number;
   revenueTotal: number;
+  contractTitle: string;
+  revenueTitle: string;
 }
 
 const DonutSection: React.FC<DonutSectionProps> = ({
   contractData,
   revenueData,
   contractTotal,
-  revenueTotal
+  revenueTotal,
+  contractTitle,
+  revenueTitle
 }) => {
   return (
     <div className="col-span-1 lg:col-span-3">
@@ -97,14 +101,14 @@ const DonutSection: React.FC<DonutSectionProps> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <DonutChartWithLegend 
-                title="Nguồn Hợp Đồng" 
+                title={contractTitle} 
                 data={contractData} 
                 colors={COLORS} 
                 totalLabel="Tổng hợp đồng"
                 totalValue={formatCurrency(contractTotal)}
             />
             <DonutChartWithLegend 
-                title="Nguồn Doanh Thu" 
+                title={revenueTitle} 
                 data={revenueData} 
                 colors={REVENUE_COLORS} 
                 totalLabel="Tổng doanh thu"

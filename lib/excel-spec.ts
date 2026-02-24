@@ -101,6 +101,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'donut-contract',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Nguồn Hợp Đồng'
+    },
     metrics: {
       ito: 'D17',
       uni: 'G17',
@@ -111,6 +114,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'donut-revenue',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Nguồn Doanh Thu'
+    },
     metrics: {
       signed: 'O34',
       new: 'P34',

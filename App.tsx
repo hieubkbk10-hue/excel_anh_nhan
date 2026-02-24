@@ -168,7 +168,9 @@ const App: React.FC = () => {
       forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
       groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)'),
       groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)'),
-      opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)')
+      opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
+      donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
+      donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
     };
   }, [excelData]);
 
@@ -318,6 +320,8 @@ const App: React.FC = () => {
               revenueData={derivedData.revenueDonutData}
               contractTotal={derivedData.contractDonutTotal}
               revenueTotal={derivedData.revenueDonutTotal}
+              contractTitle={derivedData.donutContractTitle}
+              revenueTitle={derivedData.donutRevenueTitle}
             />
         </div>
 
