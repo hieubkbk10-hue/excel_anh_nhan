@@ -163,7 +163,8 @@ const App: React.FC = () => {
       contractDonutTotal: getMetric(donutContractMetrics, 'total'),
       revenueDonutTotal: getMetric(donutRevenueMetrics, 'total'),
       kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
-      kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu')
+      kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
+      headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM')
     };
   }, [excelData]);
 
@@ -187,6 +188,7 @@ const App: React.FC = () => {
   const revenueForecastPercent = derivedData.revenueForecastPercent;
   const contractForecastPercentClamped = Math.min(contractForecastPercent, 100);
   const revenueForecastPercentClamped = Math.min(revenueForecastPercent, 100);
+  const latestUpdateText = `Cập nhật ngày ${new Date().toLocaleDateString('vi-VN')}`;
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
@@ -195,14 +197,14 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    BÁO CÁO HOẠT ĐỘNG KDPM
+                    {derivedData.headerTitle}
                 </h1>
                 <p className="text-sm text-slate-500 font-medium mt-1">
                     Kế hoạch năm: Hợp đồng {formatCurrency(derivedData.headerContractPlan)} | Doanh thu {formatCurrency(derivedData.headerRevenuePlan)}
                 </p>
             </div>
             <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-md">
-                <span>Cập nhật mới nhất</span>
+                <span>{latestUpdateText}</span>
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             </div>
         </div>

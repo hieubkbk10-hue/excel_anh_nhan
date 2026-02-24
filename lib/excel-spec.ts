@@ -6,9 +6,12 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'header-plans',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'BÁO CÁO HOẠT ĐỘNG KDPM'
+    },
     metrics: {
       contractPlan: 'L17',
-      revenuePlan: 'N34'
+      revenuePlan: 'N35'
     }
   },
   {
