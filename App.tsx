@@ -53,9 +53,9 @@ const App: React.FC = () => {
 
     const contractFromNewTotal = contract.total.fromNew ?? contract.total.opportunity ?? 0;
     const contractDonutData: DonutDataItem[] = [
-      { name: 'ITO', value: contract.ito.actual },
-      { name: 'UNI', value: contract.uni.actual },
-      { name: 'G2B', value: contract.g2b.actual }
+      { name: 'ITO', value: contract.ito.fromNew ?? 0 },
+      { name: 'UNI', value: contract.uni.fromNew ?? 0 },
+      { name: 'G2B', value: contract.g2b.fromNew ?? 0 }
     ];
 
     const revenueFromSignedTotal = revenue.total.fromSigned ?? 0;
