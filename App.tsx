@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Clock } from 'lucide-react';
 import { formatCurrency } from './lib/utils';
 import { loadExcelData } from './lib/excel';
-import { DonutDataItem, ExcelData, ExcelGroupMetrics, GroupData, OpportunityChartItem } from './types';
+import { DonutDataItem, ExcelData, GroupData, OpportunityChartItem } from './types';
 
 const App: React.FC = () => {
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
@@ -35,44 +35,74 @@ const App: React.FC = () => {
   const derivedData = useMemo(() => {
     if (!excelData) return null;
 
-    const { contract, revenue } = excelData;
-    const contractPlan = contract.total.plan;
-    const revenuePlan = revenue.total.plan;
+    const charts = excelData.charts;
+    const headerMetrics = charts['header-plans'];
+    const kpiContractMetrics = charts['kpi-contract'];
+    const kpiRevenueMetrics = charts['kpi-revenue'];
+    const forecastMetrics = charts['forecast'];
+    const groupContractMetrics = charts['group-contract'];
+    const groupRevenueMetrics = charts['group-revenue'];
+    const opportunityMetrics = charts['opportunity'];
+    const donutContractMetrics = charts['donut-contract'];
+    const donutRevenueMetrics = charts['donut-revenue'];
+
+    const getMetric = (metrics: Record<string, number> | undefined, key: string) =>
+      metrics?.[key] ?? 0;
+
+    const headerContractPlan = getMetric(headerMetrics, 'contractPlan');
+    const headerRevenuePlan = getMetric(headerMetrics, 'revenuePlan');
 
     const contractGroupData: GroupData[] = [
-      { name: 'ITO', plan: contract.ito.plan / 1_000_000, actual: contract.ito.actual / 1_000_000 },
-      { name: 'UNI', plan: contract.uni.plan / 1_000_000, actual: contract.uni.actual / 1_000_000 },
-      { name: 'G2B', plan: contract.g2b.plan / 1_000_000, actual: contract.g2b.actual / 1_000_000 }
+      {
+        name: 'ITO',
+        plan: getMetric(groupContractMetrics, 'itoPlan') / 1_000_000,
+        actual: getMetric(groupContractMetrics, 'itoActual') / 1_000_000
+      },
+      {
+        name: 'UNI',
+        plan: getMetric(groupContractMetrics, 'uniPlan') / 1_000_000,
+        actual: getMetric(groupContractMetrics, 'uniActual') / 1_000_000
+      },
+      {
+        name: 'G2B',
+        plan: getMetric(groupContractMetrics, 'g2bPlan') / 1_000_000,
+        actual: getMetric(groupContractMetrics, 'g2bActual') / 1_000_000
+      }
     ];
 
     const revenueGroupData: GroupData[] = [
-      { name: 'ITO', plan: revenue.ito.plan / 1_000_000, actual: revenue.ito.actual / 1_000_000 },
-      { name: 'UNI', plan: revenue.uni.plan / 1_000_000, actual: revenue.uni.actual / 1_000_000 },
-      { name: 'G2B', plan: revenue.g2b.plan / 1_000_000, actual: revenue.g2b.actual / 1_000_000 }
+      {
+        name: 'ITO',
+        plan: getMetric(groupRevenueMetrics, 'itoPlan') / 1_000_000,
+        actual: getMetric(groupRevenueMetrics, 'itoActual') / 1_000_000
+      },
+      {
+        name: 'UNI',
+        plan: getMetric(groupRevenueMetrics, 'uniPlan') / 1_000_000,
+        actual: getMetric(groupRevenueMetrics, 'uniActual') / 1_000_000
+      },
+      {
+        name: 'G2B',
+        plan: getMetric(groupRevenueMetrics, 'g2bPlan') / 1_000_000,
+        actual: getMetric(groupRevenueMetrics, 'g2bActual') / 1_000_000
+      }
     ];
 
-    const contractFromNewTotal = contract.total.fromNew ?? contract.total.opportunity ?? 0;
     const contractDonutData: DonutDataItem[] = [
-      { name: 'ITO', value: contract.ito.fromNew ?? 0 },
-      { name: 'UNI', value: contract.uni.fromNew ?? 0 },
-      { name: 'G2B', value: contract.g2b.fromNew ?? 0 }
+      { name: 'ITO', value: getMetric(donutContractMetrics, 'ito') },
+      { name: 'UNI', value: getMetric(donutContractMetrics, 'uni') },
+      { name: 'G2B', value: getMetric(donutContractMetrics, 'g2b') }
     ];
 
-    const revenueFromSignedTotal = revenue.total.fromSigned ?? 0;
-    const revenueFromNewTotal = revenue.total.fromNew ?? revenue.total.opportunity ?? 0;
     const revenueDonutData: DonutDataItem[] = [
-      { name: 'Từ HĐ đã ký', value: revenueFromSignedTotal },
-      { name: 'Từ HĐ mới', value: revenueFromNewTotal }
+      { name: 'Từ HĐ đã ký', value: getMetric(donutRevenueMetrics, 'signed') },
+      { name: 'Từ HĐ mới', value: getMetric(donutRevenueMetrics, 'new') }
     ];
 
-    const buildOpportunityRows = (
-      group: string,
-      contractGroup: ExcelGroupMetrics,
-      revenueGroup: ExcelGroupMetrics
-    ): OpportunityChartItem[] => {
-      const newContract = (contractGroup.fromNew ?? contractGroup.opportunity ?? 0) / 1_000_000;
-      const signedRevenue = (revenueGroup.fromSigned ?? 0) / 1_000_000;
-      const newRevenue = (revenueGroup.fromNew ?? revenueGroup.opportunity ?? 0) / 1_000_000;
+    const buildOpportunityRows = (group: string, prefix: string): OpportunityChartItem[] => {
+      const newContract = getMetric(opportunityMetrics, `${prefix}NewContract`) / 1_000_000;
+      const signedRevenue = getMetric(opportunityMetrics, `${prefix}RevenueSigned`) / 1_000_000;
+      const newRevenue = getMetric(opportunityMetrics, `${prefix}RevenueNew`) / 1_000_000;
 
       return [
         {
@@ -97,29 +127,38 @@ const App: React.FC = () => {
     };
 
     const opportunityData: OpportunityChartItem[] = [
-      ...buildOpportunityRows('ITO', contract.ito, revenue.ito),
-      ...buildOpportunityRows('UNI', contract.uni, revenue.uni),
-      ...buildOpportunityRows('G2B', contract.g2b, revenue.g2b)
+      ...buildOpportunityRows('ITO', 'ito'),
+      ...buildOpportunityRows('UNI', 'uni'),
+      ...buildOpportunityRows('G2B', 'g2b')
     ];
 
-    const contractForecast = contractFromNewTotal;
-    const revenueForecast = revenueFromSignedTotal + revenueFromNewTotal;
-    const contractForecastPercent = contractPlan ? (contractForecast / contractPlan) * 100 : 0;
-    const revenueForecastPercent = revenuePlan ? (revenueForecast / revenuePlan) * 100 : 0;
+    const forecastContractPlan = getMetric(forecastMetrics, 'contractPlan');
+    const forecastRevenuePlan = getMetric(forecastMetrics, 'revenuePlan');
+    const contractForecast = getMetric(forecastMetrics, 'contractForecast');
+    const revenueForecast =
+      getMetric(forecastMetrics, 'revenueSigned') + getMetric(forecastMetrics, 'revenueNew');
+    const contractForecastPercent =
+      forecastContractPlan ? (contractForecast / forecastContractPlan) * 100 : 0;
+    const revenueForecastPercent = forecastRevenuePlan ? (revenueForecast / forecastRevenuePlan) * 100 : 0;
 
     return {
-      contractPlan,
-      revenuePlan,
+      headerMetrics,
+      kpiContractMetrics,
+      kpiRevenueMetrics,
+      forecastMetrics,
+      headerContractPlan,
+      headerRevenuePlan,
       contractGroupData,
       revenueGroupData,
-      contractFromNewTotal,
       contractDonutData,
       revenueDonutData,
       opportunityData,
       contractForecast,
       revenueForecast,
       contractForecastPercent,
-      revenueForecastPercent
+      revenueForecastPercent,
+      contractDonutTotal: getMetric(donutContractMetrics, 'total'),
+      revenueDonutTotal: getMetric(donutRevenueMetrics, 'total')
     };
   }, [excelData]);
 
@@ -154,7 +193,7 @@ const App: React.FC = () => {
                     BÁO CÁO HOẠT ĐỘNG KDPM
                 </h1>
                 <p className="text-sm text-slate-500 font-medium mt-1">
-                    Kế hoạch năm: Hợp đồng {formatCurrency(derivedData.contractPlan)} | Doanh thu {formatCurrency(derivedData.revenuePlan)}
+                    Kế hoạch năm: Hợp đồng {formatCurrency(derivedData.headerContractPlan)} | Doanh thu {formatCurrency(derivedData.headerRevenuePlan)}
                 </p>
             </div>
             <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-md">
@@ -171,8 +210,8 @@ const App: React.FC = () => {
             <div className="h-full">
                 <KPICard 
                     title="Giá trị hợp đồng"
-                    currentValue={excelData.contract.total.actual}
-                    targetValue={excelData.contract.total.plan}
+                    currentValue={derivedData.kpiContractMetrics?.current ?? 0}
+                    targetValue={derivedData.kpiContractMetrics?.target ?? 0}
                     icon="file"
                     colorClass="text-blue-600"
                     bgClass="bg-blue-50"
@@ -182,8 +221,8 @@ const App: React.FC = () => {
             <div className="h-full">
                 <KPICard 
                     title="Giá trị doanh thu"
-                    currentValue={excelData.revenue.total.actual}
-                    targetValue={excelData.revenue.total.plan}
+                    currentValue={derivedData.kpiRevenueMetrics?.current ?? 0}
+                    targetValue={derivedData.kpiRevenueMetrics?.target ?? 0}
                     icon="dollar"
                     colorClass="text-emerald-600"
                     bgClass="bg-emerald-50"
@@ -266,8 +305,8 @@ const App: React.FC = () => {
             <DonutSection
               contractData={derivedData.contractDonutData}
               revenueData={derivedData.revenueDonutData}
-              contractTotal={excelData.contract.total.fromNew ?? excelData.contract.total.opportunity ?? 0}
-              revenueTotal={derivedData.revenueForecast}
+              contractTotal={derivedData.contractDonutTotal}
+              revenueTotal={derivedData.revenueDonutTotal}
             />
         </div>
 

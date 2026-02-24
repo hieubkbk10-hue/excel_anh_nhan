@@ -1,142 +1,204 @@
 import * as XLSX from 'xlsx';
-import { ExcelData, ExcelGroupMetrics, ExcelSectionData } from '../types';
-
-type GroupKey = 'ito' | 'uni' | 'g2b' | 'total';
-type MetricKey = 'plan' | 'opportunity' | 'actual' | 'fromSigned' | 'fromNew';
-
-type ColumnMap = Record<GroupKey, Partial<Record<MetricKey, number>>>;
+import { ExcelChartSpec, ExcelData } from '../types';
+import { EXCEL_CHART_SPECS } from './excel-spec';
 
 const EXCEL_URL = '/Hop dong - Doanh thu.xlsx';
 
 export async function loadExcelData(): Promise<ExcelData> {
-  const rows = await loadSheetRows(EXCEL_URL);
-  const contract = parseTable(rows, 'HỢP ĐỒNG', 'Năm');
-  const revenue = parseTable(rows, 'DOANH THU', 'Đến hiện tại');
-
-  return { contract, revenue };
+  const workbook = await loadWorkbook(EXCEL_URL);
+  const charts = buildCharts(workbook, EXCEL_CHART_SPECS);
+  return { charts };
 }
 
-async function loadSheetRows(url: string): Promise<unknown[][]> {
+async function loadWorkbook(url: string): Promise<XLSX.WorkBook> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Không thể tải file Excel: ${response.status}`);
   }
   const buffer = await response.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: 'array' });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+  return XLSX.read(buffer, { type: 'array' });
 }
 
-function parseTable(rows: unknown[][], startLabel: string, totalLabel: string): ExcelSectionData {
-  const startIndex = findRowIndex(rows, startLabel);
-  if (startIndex === -1) {
-    throw new Error(`Không tìm thấy bảng ${startLabel}`);
+function buildCharts(workbook: XLSX.WorkBook, specs: ExcelChartSpec[]): ExcelData['charts'] {
+  const charts = {} as ExcelData['charts'];
+  for (const spec of specs) {
+    charts[spec.id] = evaluateChart(spec, workbook);
   }
-
-  const headerRow = rows[startIndex + 1] ?? [];
-  const subHeaderRow = rows[startIndex + 2] ?? [];
-  const columnMap = buildColumnMap(headerRow, subHeaderRow);
-
-  const totalIndex = findRowIndex(rows.slice(startIndex), totalLabel);
-  if (totalIndex === -1) {
-    throw new Error(`Không tìm thấy dòng tổng ${totalLabel}`);
-  }
-  const totalRow = rows[startIndex + totalIndex] ?? [];
-
-  return {
-    ito: extractGroup(totalRow, columnMap, 'ito'),
-    uni: extractGroup(totalRow, columnMap, 'uni'),
-    g2b: extractGroup(totalRow, columnMap, 'g2b'),
-    total: extractGroup(totalRow, columnMap, 'total')
-  };
+  return charts;
 }
 
-function buildColumnMap(headerRow: unknown[], subHeaderRow: unknown[]): ColumnMap {
-  const map: ColumnMap = { ito: {}, uni: {}, g2b: {}, total: {} };
-  let currentGroup: GroupKey | null = null;
+function evaluateChart(spec: ExcelChartSpec, workbook: XLSX.WorkBook): Record<string, number> {
+  const sheetName = spec.sheet ?? workbook.SheetNames[0];
+  const metrics: Record<string, number> = {};
 
-  for (let index = 0; index < Math.max(headerRow.length, subHeaderRow.length); index += 1) {
-    const header = normalizeLabel(headerRow[index]);
-    const subHeader = normalizeLabel(subHeaderRow[index]);
+  for (const [key, expression] of Object.entries(spec.metrics)) {
+    metrics[key] = evaluateExpression(expression, workbook, sheetName);
+  }
 
-    const group = header ? getGroupKey(header) : null;
-    if (group) {
-      currentGroup = group;
+  return metrics;
+}
+
+type Token =
+  | { type: 'number'; value: string }
+  | { type: 'cell'; value: string }
+  | { type: 'operator'; value: string }
+  | { type: 'paren'; value: '(' | ')' };
+
+function evaluateExpression(
+  expression: string,
+  workbook: XLSX.WorkBook,
+  defaultSheetName: string
+): number {
+  const normalized = expression.replace(/\s+/g, '').replace(/\$/g, '');
+  if (!normalized) return 0;
+  if (/^[+-]?\d+(?:\.\d+)?$/.test(normalized)) {
+    return Number(normalized);
+  }
+
+  const tokens = tokenizeExpression(normalized);
+  if (!tokens.length) return 0;
+
+  const rpn = toRpn(tokens);
+  return evaluateRpn(rpn, workbook, defaultSheetName);
+}
+
+function tokenizeExpression(expression: string): Token[] {
+  const rawTokens = expression.match(/[A-Za-z]{1,3}\d+|\d+(?:\.\d+)?|[()+\-*/]/g);
+  if (!rawTokens) return [];
+
+  const tokens: Token[] = [];
+  let prevType: 'start' | 'operator' | 'paren-open' | 'value' = 'start';
+
+  for (const raw of rawTokens) {
+    if (raw === '(') {
+      tokens.push({ type: 'paren', value: '(' });
+      prevType = 'paren-open';
+      continue;
     }
-
-    if (!currentGroup || !subHeader) {
+    if (raw === ')') {
+      tokens.push({ type: 'paren', value: ')' });
+      prevType = 'value';
       continue;
     }
 
-    const metric = getMetricKey(subHeader);
-    if (!metric) {
+    if (['+', '-', '*', '/'].includes(raw)) {
+      if (raw === '-' && (prevType === 'start' || prevType === 'operator' || prevType === 'paren-open')) {
+        tokens.push({ type: 'number', value: '0' });
+      }
+      tokens.push({ type: 'operator', value: raw });
+      prevType = 'operator';
       continue;
     }
 
-    map[currentGroup][metric] = index;
+    if (/^\d/.test(raw)) {
+      tokens.push({ type: 'number', value: raw });
+    } else {
+      tokens.push({ type: 'cell', value: raw });
+    }
+    prevType = 'value';
   }
 
-  return map;
+  return tokens;
 }
 
-function extractGroup(row: unknown[], map: ColumnMap, group: GroupKey): ExcelGroupMetrics {
-  return {
-    plan: getRequiredValue(row, map, group, 'plan'),
-    opportunity: getRequiredValue(row, map, group, 'opportunity'),
-    actual: getRequiredValue(row, map, group, 'actual'),
-    fromSigned: getOptionalValue(row, map, group, 'fromSigned'),
-    fromNew: getOptionalValue(row, map, group, 'fromNew')
-  };
-}
+function toRpn(tokens: Token[]): Token[] {
+  const output: Token[] = [];
+  const operators: Token[] = [];
+  const precedence: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
 
-function findRowIndex(rows: unknown[][], label: string): number {
-  const normalizedLabel = normalizeLabel(label);
-  return rows.findIndex((row) => row.some((cell) => normalizeLabel(cell) === normalizedLabel));
-}
-
-function getRequiredValue(row: unknown[], map: ColumnMap, group: GroupKey, metric: MetricKey): number {
-  const index = map[group]?.[metric];
-  if (index === undefined) {
-    return 0;
+  for (const token of tokens) {
+    if (token.type === 'number' || token.type === 'cell') {
+      output.push(token);
+      continue;
+    }
+    if (token.type === 'operator') {
+      while (operators.length) {
+        const last = operators[operators.length - 1];
+        if (last.type !== 'operator') break;
+        if (precedence[last.value] >= precedence[token.value]) {
+          output.push(operators.pop() as Token);
+          continue;
+        }
+        break;
+      }
+      operators.push(token);
+      continue;
+    }
+    if (token.type === 'paren' && token.value === '(') {
+      operators.push(token);
+      continue;
+    }
+    if (token.type === 'paren' && token.value === ')') {
+      while (operators.length) {
+        const last = operators.pop() as Token;
+        if (last.type === 'paren' && last.value === '(') {
+          break;
+        }
+        output.push(last);
+      }
+    }
   }
-  return toNumber(row[index]);
-}
 
-function getOptionalValue(
-  row: unknown[],
-  map: ColumnMap,
-  group: GroupKey,
-  metric: MetricKey
-): number | undefined {
-  const index = map[group]?.[metric];
-  if (index === undefined) {
-    return undefined;
+  while (operators.length) {
+    output.push(operators.pop() as Token);
   }
-  return toNumber(row[index]);
+
+  return output;
 }
 
-function normalizeLabel(value: unknown): string {
-  if (typeof value !== 'string') {
-    return '';
+function evaluateRpn(tokens: Token[], workbook: XLSX.WorkBook, defaultSheetName: string): number {
+  const stack: number[] = [];
+
+  for (const token of tokens) {
+    if (token.type === 'number') {
+      stack.push(Number(token.value));
+      continue;
+    }
+    if (token.type === 'cell') {
+      stack.push(getCellValue(token.value, workbook, defaultSheetName));
+      continue;
+    }
+    if (token.type === 'operator') {
+      const right = stack.pop() ?? 0;
+      const left = stack.pop() ?? 0;
+      switch (token.value) {
+        case '+':
+          stack.push(left + right);
+          break;
+        case '-':
+          stack.push(left - right);
+          break;
+        case '*':
+          stack.push(left * right);
+          break;
+        case '/':
+          stack.push(right === 0 ? 0 : left / right);
+          break;
+      }
+    }
   }
-  return value.trim().toLowerCase();
+
+  return stack.pop() ?? 0;
 }
 
-function getGroupKey(label: string): GroupKey | null {
-  if (label.includes('ito')) return 'ito';
-  if (label.includes('uni')) return 'uni';
-  if (label.includes('g2b')) return 'g2b';
-  if (label.includes('bppm')) return 'total';
-  return null;
+function getCellValue(
+  reference: string,
+  workbook: XLSX.WorkBook,
+  defaultSheetName: string
+): number {
+  const [sheetName, address] = resolveReference(reference, defaultSheetName);
+  const sheet = workbook.Sheets[sheetName];
+  if (!sheet || !address) return 0;
+  const cell = sheet[address];
+  return toNumber(cell?.v);
 }
 
-function getMetricKey(label: string): MetricKey | null {
-  if (label.includes('kế hoạch')) return 'plan';
-  if (label.includes('từ hđ mới')) return 'fromNew';
-  if (label.includes('cơ hội')) return 'opportunity';
-  if (label.includes('thực tế')) return 'actual';
-  if (label.includes('từ hđ đã ký')) return 'fromSigned';
-  return null;
+function resolveReference(reference: string, defaultSheetName: string): [string, string] {
+  if (reference.includes('!')) {
+    const [sheetName, cellAddress] = reference.split('!');
+    return [sheetName || defaultSheetName, cellAddress ?? ''];
+  }
+  return [defaultSheetName, reference];
 }
 
 function toNumber(value: unknown): number {

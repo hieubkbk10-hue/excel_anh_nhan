@@ -20,24 +20,25 @@ export interface OpportunityData {
   revenueFromNew: number;
 }
 
-export interface ExcelGroupMetrics {
-  plan: number;
-  opportunity: number;
-  actual: number;
-  fromSigned?: number;
-  fromNew?: number;
-}
+export type ExcelChartId =
+  | 'header-plans'
+  | 'kpi-contract'
+  | 'kpi-revenue'
+  | 'forecast'
+  | 'group-contract'
+  | 'group-revenue'
+  | 'opportunity'
+  | 'donut-contract'
+  | 'donut-revenue';
 
-export interface ExcelSectionData {
-  ito: ExcelGroupMetrics;
-  uni: ExcelGroupMetrics;
-  g2b: ExcelGroupMetrics;
-  total: ExcelGroupMetrics;
+export interface ExcelChartSpec {
+  id: ExcelChartId;
+  sheet?: string;
+  metrics: Record<string, string>;
 }
 
 export interface ExcelData {
-  contract: ExcelSectionData;
-  revenue: ExcelSectionData;
+  charts: Record<ExcelChartId, Record<string, number>>;
 }
 
 export interface DonutDataItem {
