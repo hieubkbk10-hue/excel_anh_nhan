@@ -15,7 +15,10 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     id: 'kpi-contract',
     sheet: DEFAULT_SHEET,
     texts: {
-      title: 'Giá trị hợp đồng'
+      title: {
+        from: 'B5',
+        fallback: 'Giá trị hợp đồng'
+      }
     },
     metrics: {
       current: 'N17',

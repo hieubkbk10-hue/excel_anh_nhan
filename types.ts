@@ -35,13 +35,21 @@ export interface ExcelChartSpec {
   id: ExcelChartId;
   sheet?: string;
   metrics: Record<string, string>;
-  texts?: Record<string, string>;
+  texts?: Record<string, ExcelTextConfig>;
 }
 
 export interface ExcelData {
   charts: Record<ExcelChartId, Record<string, number>>;
   texts: Record<ExcelChartId, Record<string, string>>;
 }
+
+export type ExcelTextConfig =
+  | string
+  | {
+      value?: string;
+      from?: string;
+      fallback?: string;
+    };
 
 export interface DonutDataItem {
   name: string;
