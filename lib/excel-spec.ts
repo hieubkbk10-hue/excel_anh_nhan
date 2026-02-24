@@ -68,6 +68,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'group-revenue',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Doanh thu theo nhóm (Tr)'
+    },
     metrics: {
       itoPlan: 'C34',
       itoActual: 'E34',

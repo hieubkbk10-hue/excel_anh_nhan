@@ -166,7 +166,8 @@ const App: React.FC = () => {
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
       headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
       forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
-      groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)')
+      groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)'),
+      groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)')
     };
   }, [excelData]);
 
@@ -300,7 +301,7 @@ const App: React.FC = () => {
                 type="contract"
             />
             <GroupAnalysis 
-                title="Doanh thu theo nhóm (Tr)" 
+                title={derivedData.groupRevenueTitle} 
                 data={derivedData.revenueGroupData} 
                 type="revenue"
             />
