@@ -7,7 +7,7 @@ const EXCEL_URL = '/Hop dong - Doanh thu.xlsx';
 export async function loadExcelData(): Promise<ExcelData> {
   const workbook = await loadWorkbook(EXCEL_URL);
   const charts = buildCharts(workbook, EXCEL_CHART_SPECS);
-  const texts = buildTexts(workbook, EXCEL_CHART_SPECS);
+  const texts = buildTexts(EXCEL_CHART_SPECS);
   return { charts, texts };
 }
 
@@ -28,14 +28,13 @@ function buildCharts(workbook: XLSX.WorkBook, specs: ExcelChartSpec[]): ExcelDat
   return charts;
 }
 
-function buildTexts(workbook: XLSX.WorkBook, specs: ExcelChartSpec[]): ExcelData['texts'] {
+function buildTexts(specs: ExcelChartSpec[]): ExcelData['texts'] {
   const texts = {} as ExcelData['texts'];
   for (const spec of specs) {
-    const sheetName = spec.sheet ?? workbook.SheetNames[0];
     const resolved: Record<string, string> = {};
     if (spec.texts) {
       for (const [key, config] of Object.entries(spec.texts)) {
-        resolved[key] = resolveText(config, workbook, sheetName);
+        resolved[key] = resolveText(config);
       }
     }
     texts[spec.id] = resolved;
@@ -209,47 +208,11 @@ function getCellValue(
   return toNumber(cell?.v);
 }
 
-function resolveText(
-  config: ExcelTextConfig,
-  workbook: XLSX.WorkBook,
-  defaultSheetName: string
-): string {
-  if (typeof config === 'string') {
-    if (isCellReference(config)) {
-      const fromExcel = getCellTextValue(config, workbook, defaultSheetName);
-      return fromExcel !== '' ? fromExcel : config;
-    }
-    return config;
-  }
-
-  const fromExcel = config.from
-    ? getCellTextValue(config.from, workbook, defaultSheetName)
-    : '';
-  if (fromExcel !== '') return fromExcel;
+function resolveText(config: ExcelTextConfig): string {
+  if (typeof config === 'string') return config;
   if (config.value) return config.value;
   if (config.fallback) return config.fallback;
   return '';
-}
-
-function isCellReference(value: string): boolean {
-  const normalized = value.trim();
-  if (!normalized) return false;
-  if (/^[A-Za-z]{1,3}\d+$/.test(normalized)) return true;
-  if (/^[^!]+![A-Za-z]{1,3}\d+$/.test(normalized)) return true;
-  return false;
-}
-
-function getCellTextValue(
-  reference: string,
-  workbook: XLSX.WorkBook,
-  defaultSheetName: string
-): string {
-  const [sheetName, address] = resolveReference(reference.replace(/\$/g, ''), defaultSheetName);
-  const sheet = workbook.Sheets[sheetName];
-  if (!sheet || !address) return '';
-  const cell = sheet[address];
-  if (!cell || cell.v === undefined || cell.v === null) return '';
-  return typeof cell.v === 'string' ? cell.v : String(cell.v);
 }
 
 function resolveReference(reference: string, defaultSheetName: string): [string, string] {

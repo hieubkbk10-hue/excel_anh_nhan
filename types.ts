@@ -47,7 +47,6 @@ export type ExcelTextConfig =
   | string
   | {
       value?: string;
-      from?: string;
       fallback?: string;
     };
 
