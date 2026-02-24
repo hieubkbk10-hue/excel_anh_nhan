@@ -89,13 +89,13 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     metrics: {
       itoNewContract: 'D17',
       itoRevenueSigned: '0',
-      itoRevenueNew: 'D34',
+      itoRevenueNew: 'D35',
       uniNewContract: 'G17',
-      uniRevenueSigned: 'G34',
-      uniRevenueNew: 'H34',
+      uniRevenueSigned: 'G35',
+      uniRevenueNew: 'H35',
       g2bNewContract: 'J17',
-      g2bRevenueSigned: 'K34',
-      g2bRevenueNew: 'L34'
+      g2bRevenueSigned: 'K35',
+      g2bRevenueNew: 'L35'
     }
   },
   {
