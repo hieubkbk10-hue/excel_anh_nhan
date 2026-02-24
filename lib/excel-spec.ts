@@ -39,6 +39,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
     id: 'forecast',
     sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Dự báo cuối năm'
+    },
     metrics: {
       contractPlan: 'L17',
       contractForecast: 'M17',

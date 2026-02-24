@@ -164,7 +164,8 @@ const App: React.FC = () => {
       revenueDonutTotal: getMetric(donutRevenueMetrics, 'total'),
       kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
-      headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM')
+      headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
+      forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm')
     };
   }, [excelData]);
 
@@ -244,7 +245,7 @@ const App: React.FC = () => {
                                 <Clock size={24} strokeWidth={2.5} />
                             </div>
                             <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
-                                Dự báo cuối năm
+                                {derivedData.forecastTitle}
                             </CardTitle>
                         </div>
                     </CardHeader>
