@@ -32,8 +32,8 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
       title: 'Giá trị doanh thu'
     },
     metrics: {
-      current: 'Q34',
-      target: 'N34'
+      current: 'Q35',
+      target: 'N35'
     }
   },
   {
@@ -45,9 +45,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     metrics: {
       contractPlan: 'L17',
       contractForecast: 'M17',
-      revenuePlan: 'N34',
-      revenueSigned: 'O34',
-      revenueNew: 'P34'
+      revenuePlan: 'N35',
+      revenueSigned: 'O35',
+      revenueNew: 'P35'
     }
   },
   {
