@@ -1,5 +1,6 @@
 import { ExcelChartSpec } from '../types';
 
+export const EXCEL_FILE_URL = '';
 const DEFAULT_SHEET = 'Sheet1 (2)';
 
 export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [

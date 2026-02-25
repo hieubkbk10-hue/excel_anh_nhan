@@ -1,11 +1,13 @@
 import * as XLSX from 'xlsx';
 import { ExcelChartSpec, ExcelData, ExcelTextConfig } from '../types';
-import { EXCEL_CHART_SPECS } from './excel-spec';
-
-const EXCEL_URL = '/Hop dong - Doanh thu.xlsx';
+import { EXCEL_CHART_SPECS, EXCEL_FILE_URL } from './excel-spec';
 
 export async function loadExcelData(): Promise<ExcelData> {
-  const workbook = await loadWorkbook(EXCEL_URL);
+  const excelUrl = EXCEL_FILE_URL.trim();
+  if (!excelUrl) {
+    throw new Error('Thiếu cấu hình đường dẫn file Excel');
+  }
+  const workbook = await loadWorkbook(excelUrl);
   const charts = buildCharts(workbook, EXCEL_CHART_SPECS);
   const texts = buildTexts(EXCEL_CHART_SPECS);
   return { charts, texts };
