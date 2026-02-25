@@ -118,9 +118,9 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
       title: 'Nguồn Doanh Thu'
     },
     metrics: {
-      signed: 'O34',
-      new: 'P34',
-      total: '(O34+P34)'
+      signed: 'O35',
+      new: 'P35',
+      total: '(O35+P35)'
     }
   }
 ];
