@@ -159,7 +159,7 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
       ito: 'D35',
       uni: '(G35+H35)',
       g2b: '(K35+L35)',
-      total: '(N35+O35)'
+      total: '(O35+P35)'
     }
   },
   {
