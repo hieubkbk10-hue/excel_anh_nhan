@@ -19,7 +19,7 @@ type ColumnKey =
   | 'contractValue'
   | 'revenueValue';
 type SortDirection = 'asc' | 'desc';
-type FilterKey = Exclude<ColumnKey, 'group' | 'type' | 'priority'>;
+type FilterKey = Exclude<ColumnKey, 'group' | 'type' | 'priority' | 'contractMonth'>;
 
 const columnLabels: Record<ColumnKey, string> = {
   group: 'NHÓM',
@@ -37,11 +37,11 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
+  const [selectedContractMonth, setSelectedContractMonth] = useState('all');
   const [sortState, setSortState] = useState<{ key: ColumnKey; direction: SortDirection } | null>(null);
   const [columnFilters, setColumnFilters] = useState<Record<FilterKey, string>>({
     customer: '',
     project: '',
-    contractMonth: '',
     contractValue: '',
     revenueValue: ''
   });
@@ -61,11 +61,17 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
     return priorities.sort((a, b) => a.localeCompare(b, 'vi-VN'));
   }, [rows]);
 
+  const contractMonthOptions = useMemo(() => {
+    const months = Array.from(new Set(rows.map((row) => row.contractMonth).filter(Boolean))) as string[];
+    return months.sort((a, b) => a.localeCompare(b, 'vi-VN'));
+  }, [rows]);
+
   const filteredRows = useMemo(() => {
     const baseRows = rows.filter((row) => {
       if (selectedGroup !== 'all' && row.group !== selectedGroup) return false;
       if (selectedType !== 'all' && row.type !== selectedType) return false;
       if (selectedPriority !== 'all' && row.priority !== selectedPriority) return false;
+      if (selectedContractMonth !== 'all' && row.contractMonth !== selectedContractMonth) return false;
       return true;
     });
 
@@ -79,7 +85,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
         return String(row[key] ?? '').toLowerCase().includes(query);
       });
     });
-  }, [rows, selectedGroup, selectedType, selectedPriority, columnFilters]);
+  }, [rows, selectedGroup, selectedType, selectedPriority, selectedContractMonth, columnFilters]);
 
   const sortedRows = useMemo(() => {
     if (!sortState) return filteredRows;
@@ -181,6 +187,22 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
         </select>
       );
     }
+    if (key === 'contractMonth') {
+      return (
+        <select
+          value={selectedContractMonth}
+          onChange={(event) => setSelectedContractMonth(event.target.value)}
+          className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200"
+        >
+          <option value="all">Tất cả</option>
+          {contractMonthOptions.map((month) => (
+            <option key={month} value={month}>
+              {month}
+            </option>
+          ))}
+        </select>
+      );
+    }
 
     return (
       <input
@@ -240,9 +262,25 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
                   {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
                     <th
                       key={key}
-                      className={`px-4 py-3 text-left font-semibold whitespace-nowrap ${
+                      className={`${
+                        key === 'priority' || key === 'contractMonth' ? 'px-5' : 'px-4'
+                      } py-3 text-left font-semibold whitespace-nowrap ${
                         key === 'contractValue' || key === 'revenueValue' ? 'text-right' : ''
-                      } ${key === 'customer' ? 'w-44' : ''} ${key === 'project' ? 'w-56' : ''}`}
+                      } ${
+                        key === 'group'
+                          ? 'w-20'
+                          : key === 'type'
+                            ? 'w-24'
+                            : key === 'priority'
+                              ? 'w-32'
+                              : key === 'contractMonth'
+                                ? 'w-28'
+                                : key === 'customer'
+                                  ? 'w-44'
+                                  : key === 'project'
+                                    ? 'w-56'
+                                    : ''
+                      }`}
                     >
                       <button
                         type="button"
@@ -257,7 +295,10 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
                 </tr>
                 <tr className="bg-white">
                   {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
-                    <th key={`filter-${key}`} className="px-4 py-2">
+                    <th
+                      key={`filter-${key}`}
+                      className={`${key === 'priority' || key === 'contractMonth' ? 'px-5' : 'px-4'} py-2`}
+                    >
                       {renderFilterCell(key)}
                     </th>
                   ))}
@@ -274,8 +315,8 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
                     <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-56">
                       {row.project}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.priority}</td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.contractMonth}</td>
+                    <td className="px-5 py-3 text-slate-600 whitespace-nowrap">{row.priority}</td>
+                    <td className="px-5 py-3 text-slate-600 whitespace-nowrap">{row.contractMonth}</td>
                     <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
                       {formatCurrencyFull(row.contractValue)}
                     </td>
