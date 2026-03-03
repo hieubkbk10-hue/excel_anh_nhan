@@ -1,6 +1,12 @@
 import * as XLSX from 'xlsx';
 import { ExcelChartSpec, ExcelData, ExcelTextConfig, SignedContractRow } from '../types';
-import { EXCEL_CHART_SPECS, EXCEL_FILE_URL, HD_Thucte_SHEET, DT_Thucte_SHEET } from './excel-spec';
+import {
+  EXCEL_CHART_SPECS,
+  EXCEL_FILE_URL,
+  HD_Thucte_SHEET,
+  DT_Thucte_SHEET,
+  KH_DT_HD_da_ky_SHEET
+} from './excel-spec';
 
 export async function loadExcelData(): Promise<ExcelData> {
   const excelUrl = EXCEL_FILE_URL.trim();
@@ -12,7 +18,8 @@ export async function loadExcelData(): Promise<ExcelData> {
   const texts = buildTexts(EXCEL_CHART_SPECS);
   const contractsSigned = buildSignedContracts(workbook, HD_Thucte_SHEET);
   const revenuesSigned = buildSignedContracts(workbook, DT_Thucte_SHEET);
-  return { charts, texts, contractsSigned, revenuesSigned };
+  const revenuesFromSignedContracts = buildSignedContracts(workbook, KH_DT_HD_da_ky_SHEET);
+  return { charts, texts, contractsSigned, revenuesSigned, revenuesFromSignedContracts };
 }
 
 async function loadWorkbook(url: string): Promise<XLSX.WorkBook> {

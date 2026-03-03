@@ -4,6 +4,7 @@ export const EXCEL_FILE_URL = '/input.xlsx';
 const DEFAULT_SHEET = 'TH_2026';
 export const HD_Thucte_SHEET = 'HD_Thucte';
 export const DT_Thucte_SHEET = 'DT_Thucte';
+export const KH_DT_HD_da_ky_SHEET = 'KH DT_HD da ky';
 
 export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
@@ -100,6 +101,14 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     metrics: {}
   },
   {
+    id: 'signed-revenue-from-signed-contract-list',
+    sheet: KH_DT_HD_da_ky_SHEET,
+    texts: {
+      title: 'Doanh thu từ hợp đồng đã ký'
+    },
+    metrics: {}
+  },
+  {
     id: 'opportunity',
     sheet: DEFAULT_SHEET,
     texts: {
@@ -152,6 +161,7 @@ export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
     { order: 3, items: ['signed-contract-list'] },
     { order: 4, items: ['signed-revenue-list'] },
     { order: 5, items: ['opportunity'] },
-    { order: 6, items: ['donut-contract', 'donut-revenue'] }
+    { order: 6, items: ['donut-contract', 'donut-revenue'] },
+    { order: 7, items: ['signed-revenue-from-signed-contract-list'] }
   ]
 };
