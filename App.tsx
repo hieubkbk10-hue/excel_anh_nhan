@@ -314,7 +314,7 @@ const App: React.FC = () => {
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-slate-900">
-                  {(derivedData.contractForecast / 1_000_000_000).toFixed(1)}
+                  {(derivedData.contractForecast / 1_000_000_000).toFixed(2)}
                 </span>
                 <span className="text-lg text-slate-500 font-medium">Tỷ</span>
               </div>
@@ -332,7 +332,7 @@ const App: React.FC = () => {
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-slate-900">
-                  {(derivedData.revenueForecast / 1_000_000_000).toFixed(1)}
+                  {(derivedData.revenueForecast / 1_000_000_000).toFixed(2)}
                 </span>
                 <span className="text-lg text-slate-500 font-medium">Tỷ</span>
               </div>
