@@ -1,4 +1,4 @@
-import { ExcelChartSpec } from '../types';
+import { ExcelChartSpec, ExcelLayoutConfig } from '../types';
 
 export const EXCEL_FILE_URL = '/input.xlsx';
 const DEFAULT_SHEET = 'TH_2026';
@@ -11,7 +11,7 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
       title: 'BÁO CÁO HOẠT ĐỘNG KDPM'
     },
     metrics: {
-      contractPlan: 'L17',
+      contractPlan: 'L16',
       revenuePlan: 'N35'
     }
   },
@@ -125,3 +125,13 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     }
   }
 ];
+
+export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
+  layoutItems: ['header-plans'],
+  rowGroups: [
+    { order: 1, items: ['kpi-contract', 'kpi-revenue', 'forecast'] },
+    { order: 2, items: ['group-contract', 'group-revenue'] },
+    { order: 3, items: ['opportunity'] },
+    { order: 4, items: ['donut-contract', 'donut-revenue'] }
+  ]
+};

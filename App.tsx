@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Clock } from 'lucide-react';
 import { formatCurrency } from './lib/utils';
 import { loadExcelData } from './lib/excel';
-import { DonutDataItem, ExcelData, GroupData, OpportunityChartItem } from './types';
+import { EXCEL_LAYOUT_CONFIG } from './lib/excel-spec';
+import { buildRenderRows } from './lib/layout-order';
+import { DonutDataItem, ExcelChartId, ExcelData, GroupData, OpportunityChartItem } from './types';
 
 const App: React.FC = () => {
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
@@ -195,136 +197,159 @@ const App: React.FC = () => {
   const contractForecastPercentClamped = Math.min(contractForecastPercent, 100);
   const revenueForecastPercentClamped = Math.min(revenueForecastPercent, 100);
   const latestUpdateText = `Cập nhật ngày ${new Date().toLocaleDateString('vi-VN')}`;
+  const renderRows = buildRenderRows(EXCEL_LAYOUT_CONFIG);
+  const rowLayoutClasses: Record<number, string> = {
+    1: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
+    2: 'grid grid-cols-1 lg:grid-cols-2 gap-8',
+    3: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
+    4: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
+  };
+
+  const chartRenderers: Record<ExcelChartId, () => React.ReactNode> = {
+    'header-plans': () => (
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              {derivedData.headerTitle}
+            </h1>
+            <p className="text-sm text-slate-500 font-medium mt-1">
+              Kế hoạch năm: Hợp đồng {formatCurrency(derivedData.headerContractPlan)} | Doanh thu{' '}
+              {formatCurrency(derivedData.headerRevenuePlan)}
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-md">
+            <span>{latestUpdateText}</span>
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          </div>
+        </div>
+      </header>
+    ),
+    'kpi-contract': () => (
+      <div className="h-full">
+        <KPICard
+          title={derivedData.kpiContractTitle}
+          currentValue={derivedData.kpiContractMetrics?.current ?? 0}
+          targetValue={derivedData.kpiContractMetrics?.target ?? 0}
+          icon="file"
+          colorClass="text-blue-600"
+          bgClass="bg-blue-50"
+          barColorClass="bg-blue-600"
+        />
+      </div>
+    ),
+    'kpi-revenue': () => (
+      <div className="h-full">
+        <KPICard
+          title={derivedData.kpiRevenueTitle}
+          currentValue={derivedData.kpiRevenueMetrics?.current ?? 0}
+          targetValue={derivedData.kpiRevenueMetrics?.target ?? 0}
+          icon="dollar"
+          colorClass="text-emerald-600"
+          bgClass="bg-emerald-50"
+          barColorClass="bg-emerald-600"
+        />
+      </div>
+    ),
+    forecast: () => (
+      <div className="h-full">
+        <Card className="h-full border-none shadow-sm ring-1 ring-slate-200/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                <Clock size={24} strokeWidth={2.5} />
+              </div>
+              <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
+                {derivedData.forecastTitle}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-7">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-base font-medium text-slate-600">Hợp đồng dự kiến</span>
+                <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                  {contractForecastPercent.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-slate-900">
+                  {(derivedData.contractForecast / 1_000_000_000).toFixed(1)}
+                </span>
+                <span className="text-lg text-slate-500 font-medium">Tỷ</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-500" style={{ width: `${contractForecastPercentClamped}%` }}></div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-base font-medium text-slate-600">Doanh thu dự kiến</span>
+                <span className="text-sm font-bold text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full">
+                  {revenueForecastPercent.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-slate-900">
+                  {(derivedData.revenueForecast / 1_000_000_000).toFixed(1)}
+                </span>
+                <span className="text-lg text-slate-500 font-medium">Tỷ</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-teal-500" style={{ width: `${revenueForecastPercentClamped}%` }}></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    ),
+    'group-contract': () => (
+      <GroupAnalysis title={derivedData.groupContractTitle} data={derivedData.contractGroupData} type="contract" />
+    ),
+    'group-revenue': () => (
+      <GroupAnalysis title={derivedData.groupRevenueTitle} data={derivedData.revenueGroupData} type="revenue" />
+    ),
+    opportunity: () => (
+      <div className="col-span-1 lg:col-span-3">
+        <OpportunityChart data={derivedData.opportunityData} title={derivedData.opportunityTitle} />
+      </div>
+    ),
+    'donut-contract': () => (
+      <DonutSection
+        contractData={derivedData.contractDonutData}
+        revenueData={derivedData.revenueDonutData}
+        contractTotal={derivedData.contractDonutTotal}
+        revenueTotal={derivedData.revenueDonutTotal}
+        contractTitle={derivedData.donutContractTitle}
+        revenueTitle={derivedData.donutRevenueTitle}
+      />
+    ),
+    'donut-revenue': () => null
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    {derivedData.headerTitle}
-                </h1>
-                <p className="text-sm text-slate-500 font-medium mt-1">
-                    Kế hoạch năm: Hợp đồng {formatCurrency(derivedData.headerContractPlan)} | Doanh thu {formatCurrency(derivedData.headerRevenuePlan)}
-                </p>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-md">
-                <span>{latestUpdateText}</span>
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            </div>
-        </div>
-      </header>
+      {renderRows
+        .filter((row) => row.type === 'layout')
+        .flatMap((row) =>
+          row.items.map((id) => {
+            const renderer = chartRenderers[id];
+            return renderer ? <React.Fragment key={`layout-${id}`}>{renderer()}</React.Fragment> : null;
+          })
+        )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        {/* TOP KPI ROW */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="h-full">
-                <KPICard 
-                    title={derivedData.kpiContractTitle}
-                    currentValue={derivedData.kpiContractMetrics?.current ?? 0}
-                    targetValue={derivedData.kpiContractMetrics?.target ?? 0}
-                    icon="file"
-                    colorClass="text-blue-600"
-                    bgClass="bg-blue-50"
-                    barColorClass="bg-blue-600"
-                />
+        {renderRows
+          .filter((row) => row.type === 'row')
+          .map((row) => (
+            <div key={`row-${row.order}`} className={rowLayoutClasses[row.order] ?? 'grid grid-cols-1 gap-6'}>
+              {row.items.map((id) => {
+                const renderer = chartRenderers[id];
+                return renderer ? <React.Fragment key={id}>{renderer()}</React.Fragment> : null;
+              })}
             </div>
-            <div className="h-full">
-                <KPICard 
-                    title={derivedData.kpiRevenueTitle}
-                    currentValue={derivedData.kpiRevenueMetrics?.current ?? 0}
-                    targetValue={derivedData.kpiRevenueMetrics?.target ?? 0}
-                    icon="dollar"
-                    colorClass="text-emerald-600"
-                    bgClass="bg-emerald-50"
-                    barColorClass="bg-emerald-600"
-                />
-            </div>
-            <div className="h-full">
-                 <Card className="h-full border-none shadow-sm ring-1 ring-slate-200/50">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                                <Clock size={24} strokeWidth={2.5} />
-                            </div>
-                            <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
-                                {derivedData.forecastTitle}
-                            </CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="pt-4 space-y-7">
-                        {/* Forecast Items */}
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-base font-medium text-slate-600">Hợp đồng dự kiến</span>
-                                <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
-                                  {contractForecastPercent.toFixed(1)}%
-                                </span>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-slate-900">
-                                  {(derivedData.contractForecast / 1_000_000_000).toFixed(1)}
-                                </span>
-                                <span className="text-lg text-slate-500 font-medium">Tỷ</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500" style={{ width: `${contractForecastPercentClamped}%` }}></div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-base font-medium text-slate-600">Doanh thu dự kiến</span>
-                                <span className="text-sm font-bold text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full">
-                                  {revenueForecastPercent.toFixed(1)}%
-                                </span>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-slate-900">
-                                  {(derivedData.revenueForecast / 1_000_000_000).toFixed(1)}
-                                </span>
-                                <span className="text-lg text-slate-500 font-medium">Tỷ</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-teal-500" style={{ width: `${revenueForecastPercentClamped}%` }}></div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-
-        {/* MIDDLE CHART ROW */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <GroupAnalysis 
-                title={derivedData.groupContractTitle} 
-                data={derivedData.contractGroupData} 
-                type="contract"
-            />
-            <GroupAnalysis 
-                title={derivedData.groupRevenueTitle} 
-                data={derivedData.revenueGroupData} 
-                type="revenue"
-            />
-        </div>
-
-        {/* BOTTOM SECTIONS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="col-span-1 lg:col-span-3">
-                 <OpportunityChart data={derivedData.opportunityData} title={derivedData.opportunityTitle} />
-            </div>
-            <DonutSection
-              contractData={derivedData.contractDonutData}
-              revenueData={derivedData.revenueDonutData}
-              contractTotal={derivedData.contractDonutTotal}
-              revenueTotal={derivedData.revenueDonutTotal}
-              contractTitle={derivedData.donutContractTitle}
-              revenueTitle={derivedData.donutRevenueTitle}
-            />
-        </div>
-
+          ))}
       </main>
     </div>
   );

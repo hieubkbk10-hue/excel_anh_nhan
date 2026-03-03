@@ -31,6 +31,18 @@ export type ExcelChartId =
   | 'donut-contract'
   | 'donut-revenue';
 
+export type ExcelChartOrder = number | 'layout';
+
+export interface ExcelChartOrderGroup {
+  order: number;
+  items: ExcelChartId[];
+}
+
+export interface ExcelLayoutConfig {
+  layoutItems: ExcelChartId[];
+  rowGroups: ExcelChartOrderGroup[];
+}
+
 export interface ExcelChartSpec {
   id: ExcelChartId;
   sheet?: string;
