@@ -49,6 +49,7 @@ const App: React.FC = () => {
     const groupRevenueMetrics = charts['group-revenue'];
     const opportunityMetrics = charts['opportunity'];
     const donutContractMetrics = charts['donut-contract'];
+    const donutRevenueSourceMetrics = charts['donut-revenue-source'];
     const donutRevenueMetrics = charts['donut-revenue'];
 
     const getMetric = (metrics: Record<string, number> | undefined, key: string) =>
@@ -106,6 +107,12 @@ const App: React.FC = () => {
       { name: 'Từ HĐ mới', value: getMetric(donutRevenueMetrics, 'new') }
     ];
 
+    const revenueSourceDonutData: DonutDataItem[] = [
+      { name: 'ITO', value: getMetric(donutRevenueSourceMetrics, 'ito') },
+      { name: 'UNI', value: getMetric(donutRevenueSourceMetrics, 'uni') },
+      { name: 'G2B', value: getMetric(donutRevenueSourceMetrics, 'g2b') }
+    ];
+
     const buildOpportunityRows = (group: string, prefix: string): OpportunityChartItem[] => {
       const newContract = getMetric(opportunityMetrics, `${prefix}NewContract`) / 1_000_000;
       const signedRevenue = getMetric(opportunityMetrics, `${prefix}RevenueSigned`) / 1_000_000;
@@ -159,12 +166,14 @@ const App: React.FC = () => {
       revenueGroupData,
       contractDonutData,
       revenueDonutData,
+      revenueSourceDonutData,
       opportunityData,
       contractForecast,
       revenueForecast,
       contractForecastPercent,
       revenueForecastPercent,
       contractDonutTotal: getMetric(donutContractMetrics, 'total'),
+      revenueSourceDonutTotal: getMetric(donutRevenueSourceMetrics, 'total'),
       revenueDonutTotal: getMetric(donutRevenueMetrics, 'total'),
       kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
@@ -198,6 +207,7 @@ const App: React.FC = () => {
       opportunitySourceRows: excelData.opportunitySources,
       opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
+      donutRevenueSourceTitle: getText('donut-revenue-source', 'title', 'Nguồn doanh thu'),
       donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
     };
   }, [excelData]);
@@ -367,12 +377,16 @@ const App: React.FC = () => {
       <DonutSection
         contractData={derivedData.contractDonutData}
         revenueData={derivedData.revenueDonutData}
+        revenueSourceData={derivedData.revenueSourceDonutData}
         contractTotal={derivedData.contractDonutTotal}
         revenueTotal={derivedData.revenueDonutTotal}
+        revenueSourceTotal={derivedData.revenueSourceDonutTotal}
         contractTitle={derivedData.donutContractTitle}
         revenueTitle={derivedData.donutRevenueTitle}
+        revenueSourceTitle={derivedData.donutRevenueSourceTitle}
       />
     ),
+    'donut-revenue-source': () => null,
     'donut-revenue': () => null
   };
 

@@ -79,19 +79,25 @@ const DonutChartWithLegend = ({
 interface DonutSectionProps {
   contractData: DonutDataItem[];
   revenueData: DonutDataItem[];
+  revenueSourceData: DonutDataItem[];
   contractTotal: number;
   revenueTotal: number;
+  revenueSourceTotal: number;
   contractTitle: string;
   revenueTitle: string;
+  revenueSourceTitle: string;
 }
 
 const DonutSection: React.FC<DonutSectionProps> = ({
   contractData,
   revenueData,
+  revenueSourceData,
   contractTotal,
   revenueTotal,
+  revenueSourceTotal,
   contractTitle,
-  revenueTitle
+  revenueTitle,
+  revenueSourceTitle
 }) => {
   return (
     <div className="col-span-1 lg:col-span-3">
@@ -99,13 +105,20 @@ const DonutSection: React.FC<DonutSectionProps> = ({
             <PieChartIcon className="text-slate-500" size={24} />
             <h3 className="text-xl font-bold text-slate-800">Phân tích hợp đồng - Doanh thu</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <DonutChartWithLegend 
                 title={contractTitle} 
                 data={contractData} 
                 colors={COLORS} 
                 totalLabel="Tổng hợp đồng"
                 totalValue={formatCurrency(contractTotal)}
+            />
+            <DonutChartWithLegend 
+                title={revenueSourceTitle} 
+                data={revenueSourceData} 
+                colors={COLORS} 
+                totalLabel="Tổng doanh thu"
+                totalValue={formatCurrency(revenueSourceTotal)}
             />
             <DonutChartWithLegend 
                 title={revenueTitle} 

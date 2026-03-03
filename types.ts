@@ -33,6 +33,7 @@ export type ExcelChartId =
   | 'opportunity-source-list'
   | 'opportunity'
   | 'donut-contract'
+  | 'donut-revenue-source'
   | 'donut-revenue';
 
 export type ExcelChartOrder = number | 'layout';

@@ -150,6 +150,19 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     }
   },
   {
+    id: 'donut-revenue-source',
+    sheet: DEFAULT_SHEET,
+    texts: {
+      title: 'Nguồn doanh thu'
+    },
+    metrics: {
+      ito: 'D35',
+      uni: '(G35+H35)',
+      g2b: '(K35+L35)',
+      total: '(N35+O35)'
+    }
+  },
+  {
     id: 'donut-revenue',
     sheet: DEFAULT_SHEET,
     texts: {
@@ -171,7 +184,7 @@ export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
     { order: 3, items: ['signed-contract-list'] },
     { order: 4, items: ['signed-revenue-list'] },
     { order: 5, items: ['opportunity'] },
-    { order: 6, items: ['donut-contract', 'donut-revenue'] },
+    { order: 6, items: ['donut-contract', 'donut-revenue-source', 'donut-revenue'] },
     { order: 7, items: ['signed-revenue-from-signed-contract-list'] },
     { order: 8, items: ['opportunity-source-list'] }
   ]
