@@ -63,14 +63,13 @@ function buildSignedContracts(workbook: XLSX.WorkBook, sheetName: string): Signe
       const normalizedCustomer = String(customer ?? '').trim();
       const normalizedContractNo = String(contractNo ?? '').trim();
       const normalizedContent = String(content ?? '').trim();
-      const normalizedDate = String(contractDate ?? '').trim();
       return {
         group: normalizedGroup,
         customer: normalizedCustomer,
         contractNo: normalizedContractNo,
         content: normalizedContent,
         value: toNumber(value),
-        contractDate: normalizedDate
+        contractDate: formatExcelDateToDDMMYYYY(contractDate)
       };
     })
     .filter((row) => row.group || row.customer || row.contractNo || row.content || row.value || row.contractDate);
@@ -265,4 +264,38 @@ function toNumber(value: unknown): number {
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
+}
+
+function formatExcelDateToDDMMYYYY(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'number') {
+    const parsed = XLSX.SSF.parse_date_code(value);
+    if (!parsed) return '';
+    return formatDateParts(parsed.d, parsed.m, parsed.y);
+  }
+
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  const normalized = raw.replace(/-/g, '/');
+  const parts = normalized.split('/').map((part) => part.trim()).filter(Boolean);
+  if (parts.length === 3) {
+    const day = Number(parts[0]);
+    const month = Number(parts[1]);
+    let year = Number(parts[2]);
+    if (year < 100) year += 2000;
+    if (Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)) {
+      return formatDateParts(day, month, year);
+    }
+  }
+
+  return raw;
+}
+
+function formatDateParts(day: number, month: number, year: number): string {
+  const safeDay = Math.max(1, day);
+  const safeMonth = Math.max(1, month);
+  const safeYear = Math.max(0, year);
+  const paddedDay = String(safeDay).padStart(2, '0');
+  const paddedMonth = String(safeMonth).padStart(2, '0');
+  return `${paddedDay}/${paddedMonth}/${safeYear}`;
 }

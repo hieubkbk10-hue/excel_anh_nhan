@@ -8,8 +8,29 @@ interface SignedContractListProps {
   title: string;
 }
 
+type ColumnKey = 'group' | 'customer' | 'contractNo' | 'content' | 'value' | 'contractDate';
+type SortDirection = 'asc' | 'desc';
+
+const columnLabels: Record<ColumnKey, string> = {
+  group: 'NHÓM',
+  customer: 'KHÁCH HÀNG',
+  contractNo: 'SỐ HĐ',
+  content: 'NỘI DUNG',
+  value: 'GIÁ TRỊ',
+  contractDate: 'NGÀY HĐ'
+};
+
 const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) => {
   const [selectedGroup, setSelectedGroup] = useState('all');
+  const [sortState, setSortState] = useState<{ key: ColumnKey; direction: SortDirection } | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<ColumnKey, string>>({
+    group: '',
+    customer: '',
+    contractNo: '',
+    content: '',
+    value: '',
+    contractDate: ''
+  });
 
   const groupOptions = useMemo(() => {
     const groups = Array.from(
@@ -19,13 +40,43 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
   }, [rows]);
 
   const filteredRows = useMemo(() => {
-    if (selectedGroup === 'all') return rows;
-    return rows.filter((row) => row.group === selectedGroup);
-  }, [rows, selectedGroup]);
+    const baseRows = selectedGroup === 'all' ? rows : rows.filter((row) => row.group === selectedGroup);
+    return baseRows.filter((row) => {
+      return (Object.keys(columnFilters) as ColumnKey[]).every((key) => {
+        const query = columnFilters[key].trim().toLowerCase();
+        if (!query) return true;
+        if (key === 'value') {
+          return String(row.value).toLowerCase().includes(query);
+        }
+        return String(row[key] ?? '').toLowerCase().includes(query);
+      });
+    });
+  }, [rows, selectedGroup, columnFilters]);
+
+  const toDateValue = (dateText: string) => {
+    const [day, month, year] = dateText.split('/').map((part) => Number(part));
+    if (!day || !month || !year) return 0;
+    return new Date(year, month - 1, day).getTime();
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sortState) return filteredRows;
+    const { key, direction } = sortState;
+    const sorted = [...filteredRows].sort((a, b) => {
+      if (key === 'value') {
+        return a.value - b.value;
+      }
+      if (key === 'contractDate') {
+        return toDateValue(a.contractDate) - toDateValue(b.contractDate);
+      }
+      return String(a[key] ?? '').localeCompare(String(b[key] ?? ''), 'vi-VN');
+    });
+    return direction === 'asc' ? sorted : sorted.reverse();
+  }, [filteredRows, sortState]);
 
   const summaryItems = useMemo(() => {
     const summaryMap = new Map<string, { count: number; total: number }>();
-    for (const row of filteredRows) {
+    for (const row of sortedRows) {
       const group = row.group || 'Khác';
       const current = summaryMap.get(group) ?? { count: 0, total: 0 };
       current.count += 1;
@@ -37,7 +88,28 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
       count: data.count,
       total: data.total
     }));
-  }, [filteredRows]);
+  }, [sortedRows]);
+
+  const handleFilterChange = (key: ColumnKey, value: string) => {
+    setColumnFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const toggleSort = (key: ColumnKey) => {
+    setSortState((prev) => {
+      if (!prev || prev.key !== key) {
+        return { key, direction: 'asc' };
+      }
+      if (prev.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+      return null;
+    });
+  };
+
+  const getSortIndicator = (key: ColumnKey) => {
+    if (!sortState || sortState.key !== key) return '';
+    return sortState.direction === 'asc' ? '▲' : '▼';
+  };
 
   return (
     <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200">
@@ -84,25 +156,48 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">NHÓM</th>
-                <th className="px-4 py-3 text-left font-semibold">KHÁCH HÀNG</th>
-                <th className="px-4 py-3 text-left font-semibold">SỐ HĐ</th>
-                <th className="px-4 py-3 text-left font-semibold">NỘI DUNG</th>
-                <th className="px-4 py-3 text-right font-semibold">GIÁ TRỊ</th>
-                <th className="px-4 py-3 text-left font-semibold">NGÀY HĐ</th>
+                {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
+                  <th
+                    key={key}
+                    className={`px-4 py-3 text-left font-semibold whitespace-nowrap ${
+                      key === 'value' ? 'text-right' : ''
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(key)}
+                      className="flex items-center gap-1 font-semibold text-slate-600 hover:text-slate-900"
+                    >
+                      {columnLabels[key]}
+                      <span className="text-xs text-slate-400">{getSortIndicator(key)}</span>
+                    </button>
+                  </th>
+                ))}
+              </tr>
+              <tr className="bg-white">
+                {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
+                  <th key={`filter-${key}`} className="px-4 py-2">
+                    <input
+                      value={columnFilters[key]}
+                      onChange={(event) => handleFilterChange(key, event.target.value)}
+                      placeholder={`Tìm ${columnLabels[key].toLowerCase()}`}
+                      className="h-8 w-full rounded-md border border-slate-200 px-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                    />
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredRows.map((row, index) => (
+              {sortedRows.map((row, index) => (
                 <tr key={`${row.contractNo}-${index}`} className="hover:bg-slate-50/60">
-                  <td className="px-4 py-3 font-medium text-slate-700">{row.group}</td>
-                  <td className="px-4 py-3 text-slate-600">{row.customer}</td>
-                  <td className="px-4 py-3 text-slate-600">{row.contractNo}</td>
-                  <td className="px-4 py-3 text-slate-600">{row.content}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-slate-700">
+                  <td className="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.customer}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.contractNo}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.content}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
                     {formatCurrencyFull(row.value)}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{row.contractDate}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.contractDate}</td>
                 </tr>
               ))}
             </tbody>
