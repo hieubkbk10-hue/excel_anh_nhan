@@ -83,6 +83,14 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     }
   },
   {
+    id: 'signed-contract-list',
+    sheet: HD_Thucte_SHEET,
+    texts: {
+      title: 'Chi tiết danh sách hợp đồng đã ký'
+    },
+    metrics: {}
+  },
+  {
     id: 'opportunity',
     sheet: DEFAULT_SHEET,
     texts: {

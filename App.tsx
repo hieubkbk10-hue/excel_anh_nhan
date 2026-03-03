@@ -171,7 +171,11 @@ const App: React.FC = () => {
       forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
       groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)'),
       groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)'),
-      signedContractTitle: 'Chi tiết danh sách hợp đồng đã ký',
+      signedContractTitle: getText(
+        'signed-contract-list',
+        'title',
+        'Chi tiết danh sách hợp đồng đã ký'
+      ),
       signedContractRows: excelData.contractsSigned,
       opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
