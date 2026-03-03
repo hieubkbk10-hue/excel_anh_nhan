@@ -5,6 +5,7 @@ const DEFAULT_SHEET = 'TH_2026';
 export const HD_Thucte_SHEET = 'HD_Thucte';
 export const DT_Thucte_SHEET = 'DT_Thucte';
 export const KH_DT_HD_da_ky_SHEET = 'KH DT_HD da ky';
+export const KH_CoHoi_SHEET = 'KH_CoHoi' ; 
 
 export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
@@ -109,6 +110,15 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     metrics: {}
   },
   {
+    id: 'opportunity-source-list',
+    sheet: KH_CoHoi_SHEET,
+    texts: {
+      title: 'Nguồn dự án tìm năng',
+      revenueFormula: 'Giá trị DT = H + J + L (theo từng dòng)'
+    },
+    metrics: {}
+  },
+  {
     id: 'opportunity',
     sheet: DEFAULT_SHEET,
     texts: {
@@ -162,6 +172,7 @@ export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
     { order: 4, items: ['signed-revenue-list'] },
     { order: 5, items: ['opportunity'] },
     { order: 6, items: ['donut-contract', 'donut-revenue'] },
-    { order: 7, items: ['signed-revenue-from-signed-contract-list'] }
+    { order: 7, items: ['signed-revenue-from-signed-contract-list'] },
+    { order: 8, items: ['opportunity-source-list'] }
   ]
 };

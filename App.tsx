@@ -4,6 +4,7 @@ import GroupAnalysis from './components/dashboard/GroupAnalysis';
 import OpportunityChart from './components/dashboard/OpportunityChart';
 import DonutSection from './components/dashboard/DonutSection';
 import SignedContractList from './components/dashboard/SignedContractList';
+import OpportunitySourceList from './components/dashboard/OpportunitySourceList';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Clock } from 'lucide-react';
 import { formatCurrency } from './lib/utils';
@@ -189,6 +190,12 @@ const App: React.FC = () => {
         'Doanh thu từ hợp đồng đã ký'
       ),
       signedRevenueFromSignedContractRows: excelData.revenuesFromSignedContracts,
+      opportunitySourceTitle: getText(
+        'opportunity-source-list',
+        'title',
+        'Nguồn dự án tìm năng'
+      ),
+      opportunitySourceRows: excelData.opportunitySources,
       opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
       donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
@@ -224,7 +231,8 @@ const App: React.FC = () => {
     4: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
     5: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
     6: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
-    7: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
+    7: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
+    8: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
   };
 
   const chartRenderers: Record<ExcelChartId, () => React.ReactNode> = {
@@ -342,6 +350,12 @@ const App: React.FC = () => {
       <SignedContractList
         rows={derivedData.signedRevenueFromSignedContractRows}
         title={derivedData.signedRevenueFromSignedContractTitle}
+      />
+    ),
+    'opportunity-source-list': () => (
+      <OpportunitySourceList
+        rows={derivedData.opportunitySourceRows}
+        title={derivedData.opportunitySourceTitle}
       />
     ),
     opportunity: () => (

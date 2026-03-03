@@ -30,6 +30,7 @@ export type ExcelChartId =
   | 'signed-contract-list'
   | 'signed-revenue-list'
   | 'signed-revenue-from-signed-contract-list'
+  | 'opportunity-source-list'
   | 'opportunity'
   | 'donut-contract'
   | 'donut-revenue';
@@ -59,6 +60,7 @@ export interface ExcelData {
   contractsSigned: SignedContractRow[];
   revenuesSigned: SignedContractRow[];
   revenuesFromSignedContracts: SignedContractRow[];
+  opportunitySources: OpportunitySourceRow[];
 }
 
 export type ExcelTextConfig =
@@ -90,4 +92,15 @@ export interface SignedContractRow {
   content: string;
   value: number;
   contractDate: string;
+}
+
+export interface OpportunitySourceRow {
+  group: string;
+  customer: string;
+  type: string;
+  project: string;
+  priority: string;
+  contractMonth: string;
+  contractValue: number;
+  revenueValue: number;
 }

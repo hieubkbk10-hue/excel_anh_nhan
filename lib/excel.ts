@@ -1,11 +1,12 @@
 import * as XLSX from 'xlsx';
-import { ExcelChartSpec, ExcelData, ExcelTextConfig, SignedContractRow } from '../types';
+import { ExcelChartSpec, ExcelData, ExcelTextConfig, OpportunitySourceRow, SignedContractRow } from '../types';
 import {
   EXCEL_CHART_SPECS,
   EXCEL_FILE_URL,
   HD_Thucte_SHEET,
   DT_Thucte_SHEET,
-  KH_DT_HD_da_ky_SHEET
+  KH_DT_HD_da_ky_SHEET,
+  KH_CoHoi_SHEET
 } from './excel-spec';
 
 export async function loadExcelData(): Promise<ExcelData> {
@@ -19,7 +20,8 @@ export async function loadExcelData(): Promise<ExcelData> {
   const contractsSigned = buildSignedContracts(workbook, HD_Thucte_SHEET);
   const revenuesSigned = buildSignedContracts(workbook, DT_Thucte_SHEET);
   const revenuesFromSignedContracts = buildSignedContracts(workbook, KH_DT_HD_da_ky_SHEET);
-  return { charts, texts, contractsSigned, revenuesSigned, revenuesFromSignedContracts };
+  const opportunitySources = buildOpportunitySources(workbook, KH_CoHoi_SHEET);
+  return { charts, texts, contractsSigned, revenuesSigned, revenuesFromSignedContracts, opportunitySources };
 }
 
 async function loadWorkbook(url: string): Promise<XLSX.WorkBook> {
@@ -81,6 +83,53 @@ function buildSignedContracts(workbook: XLSX.WorkBook, sheetName: string): Signe
       };
     })
     .filter((row) => row.group || row.customer || row.contractNo || row.content || row.value || row.contractDate);
+}
+
+function buildOpportunitySources(workbook: XLSX.WorkBook, sheetName: string): OpportunitySourceRow[] {
+  const sheet = workbook.Sheets[sheetName];
+  if (!sheet) return [];
+  const sheetRange = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1');
+  const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
+    header: 1,
+    range: { s: { r: 1, c: 0 }, e: { r: sheetRange.e.r, c: 11 } },
+    defval: '',
+    raw: false
+  });
+
+  return rows
+    .map((row) => {
+      const [group, customer, type, project, priority, contractMonth, contractValue, revenue1, , revenue2, , revenue3] =
+        row ?? [];
+      const normalizedGroup = String(group ?? '').trim();
+      const normalizedCustomer = String(customer ?? '').trim();
+      const normalizedType = String(type ?? '').trim();
+      const normalizedProject = String(project ?? '').trim();
+      const normalizedPriority = String(priority ?? '').trim();
+      const normalizedMonth = String(contractMonth ?? '').trim();
+      const valueContract = toNumber(contractValue);
+      const valueRevenue = toNumber(revenue1) + toNumber(revenue2) + toNumber(revenue3);
+      return {
+        group: normalizedGroup,
+        customer: normalizedCustomer,
+        type: normalizedType,
+        project: normalizedProject,
+        priority: normalizedPriority,
+        contractMonth: normalizedMonth,
+        contractValue: valueContract,
+        revenueValue: valueRevenue
+      };
+    })
+    .filter(
+      (row) =>
+        row.group ||
+        row.customer ||
+        row.type ||
+        row.project ||
+        row.priority ||
+        row.contractMonth ||
+        row.contractValue ||
+        row.revenueValue
+    );
 }
 
 function evaluateChart(spec: ExcelChartSpec, workbook: XLSX.WorkBook): Record<string, number> {
