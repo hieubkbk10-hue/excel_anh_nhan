@@ -1,7 +1,7 @@
 import { ExcelChartSpec, ExcelLayoutConfig } from '../types';
 
 export const EXCEL_FILE_URL = '/input.xlsx';
-const DEFAULT_SHEET = 'TH_2026';
+export const DEFAULT_SHEET = 'TH_2026';
 export const HD_Thucte_SHEET = 'HD_Thucte';
 export const DT_Thucte_SHEET = 'DT_Thucte';
 export const KH_DT_HD_da_ky_SHEET = 'KH DT_HD da ky';

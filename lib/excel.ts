@@ -3,18 +3,70 @@ import { ExcelChartSpec, ExcelData, ExcelTextConfig, OpportunitySourceRow, Signe
 import {
   EXCEL_CHART_SPECS,
   EXCEL_FILE_URL,
+  DEFAULT_SHEET,
   HD_Thucte_SHEET,
   DT_Thucte_SHEET,
   KH_DT_HD_da_ky_SHEET,
   KH_CoHoi_SHEET
 } from './excel-spec';
 
+const REQUIRED_SHEETS = [
+  DEFAULT_SHEET,
+  HD_Thucte_SHEET,
+  DT_Thucte_SHEET,
+  KH_DT_HD_da_ky_SHEET,
+  KH_CoHoi_SHEET
+];
+
 export async function loadExcelData(): Promise<ExcelData> {
   const excelUrl = EXCEL_FILE_URL.trim();
   if (!excelUrl) {
     throw new Error('Thiếu cấu hình đường dẫn file Excel');
   }
-  const workbook = await loadWorkbook(excelUrl);
+  const workbook = await loadWorkbookFromUrl(excelUrl);
+  return buildExcelData(workbook);
+}
+
+export async function loadExcelDataFromFile(file: File): Promise<ExcelData> {
+  if (!file) {
+    throw new Error('Không có file Excel');
+  }
+  if (file.size === 0) {
+    throw new Error('File Excel rỗng');
+  }
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+    throw new Error('File không đúng định dạng .xlsx/.xls');
+  }
+  let buffer: ArrayBuffer;
+  try {
+    buffer = await file.arrayBuffer();
+  } catch {
+    throw new Error('Không thể đọc file Excel');
+  }
+  const workbook = loadWorkbookFromArrayBuffer(buffer);
+  return buildExcelData(workbook);
+}
+
+async function loadWorkbookFromUrl(url: string): Promise<XLSX.WorkBook> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Không thể tải file Excel: ${response.status}`);
+  }
+  const buffer = await response.arrayBuffer();
+  return loadWorkbookFromArrayBuffer(buffer);
+}
+
+function loadWorkbookFromArrayBuffer(buffer: ArrayBuffer): XLSX.WorkBook {
+  try {
+    return XLSX.read(buffer, { type: 'array' });
+  } catch {
+    throw new Error('File Excel không hợp lệ');
+  }
+}
+
+function buildExcelData(workbook: XLSX.WorkBook): ExcelData {
+  ensureWorkbookSheets(workbook);
   const charts = buildCharts(workbook, EXCEL_CHART_SPECS);
   const texts = buildTexts(EXCEL_CHART_SPECS);
   const contractsSigned = buildSignedContracts(workbook, HD_Thucte_SHEET);
@@ -24,13 +76,11 @@ export async function loadExcelData(): Promise<ExcelData> {
   return { charts, texts, contractsSigned, revenuesSigned, revenuesFromSignedContracts, opportunitySources };
 }
 
-async function loadWorkbook(url: string): Promise<XLSX.WorkBook> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Không thể tải file Excel: ${response.status}`);
+function ensureWorkbookSheets(workbook: XLSX.WorkBook): void {
+  const missingSheets = REQUIRED_SHEETS.filter((sheet) => !workbook.Sheets[sheet]);
+  if (missingSheets.length) {
+    throw new Error(`Thiếu sheet bắt buộc: ${missingSheets.join(', ')}`);
   }
-  const buffer = await response.arrayBuffer();
-  return XLSX.read(buffer, { type: 'array' });
 }
 
 function buildCharts(workbook: XLSX.WorkBook, specs: ExcelChartSpec[]): ExcelData['charts'] {
