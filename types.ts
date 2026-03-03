@@ -27,6 +27,7 @@ export type ExcelChartId =
   | 'forecast'
   | 'group-contract'
   | 'group-revenue'
+  | 'signed-contract-list'
   | 'opportunity'
   | 'donut-contract'
   | 'donut-revenue';
@@ -53,6 +54,7 @@ export interface ExcelChartSpec {
 export interface ExcelData {
   charts: Record<ExcelChartId, Record<string, number>>;
   texts: Record<ExcelChartId, Record<string, string>>;
+  contractsSigned: SignedContractRow[];
 }
 
 export type ExcelTextConfig =
@@ -75,4 +77,13 @@ export interface OpportunityChartItem {
   value2: number;
   value3: number;
   total: number;
+}
+
+export interface SignedContractRow {
+  group: string;
+  customer: string;
+  contractNo: string;
+  content: string;
+  value: number;
+  contractDate: string;
 }

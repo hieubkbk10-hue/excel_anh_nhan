@@ -2,6 +2,7 @@ import { ExcelChartSpec, ExcelLayoutConfig } from '../types';
 
 export const EXCEL_FILE_URL = '/input.xlsx';
 const DEFAULT_SHEET = 'TH_2026';
+export const HD_Thucte_SHEET = 'HD_Thucte';
 
 export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
@@ -131,7 +132,8 @@ export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
   rowGroups: [
     { order: 1, items: ['kpi-contract', 'kpi-revenue', 'forecast'] },
     { order: 2, items: ['group-contract', 'group-revenue'] },
-    { order: 3, items: ['opportunity'] },
-    { order: 4, items: ['donut-contract', 'donut-revenue'] }
+    { order: 3, items: ['signed-contract-list'] },
+    { order: 4, items: ['opportunity'] },
+    { order: 5, items: ['donut-contract', 'donut-revenue'] }
   ]
 };

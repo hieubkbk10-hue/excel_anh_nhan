@@ -3,6 +3,7 @@ import KPICard from './components/dashboard/KPICard';
 import GroupAnalysis from './components/dashboard/GroupAnalysis';
 import OpportunityChart from './components/dashboard/OpportunityChart';
 import DonutSection from './components/dashboard/DonutSection';
+import SignedContractList from './components/dashboard/SignedContractList';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Clock } from 'lucide-react';
 import { formatCurrency } from './lib/utils';
@@ -170,6 +171,8 @@ const App: React.FC = () => {
       forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
       groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)'),
       groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)'),
+      signedContractTitle: 'Chi tiết danh sách hợp đồng đã ký',
+      signedContractRows: excelData.contractsSigned,
       opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
       donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
@@ -201,8 +204,9 @@ const App: React.FC = () => {
   const rowLayoutClasses: Record<number, string> = {
     1: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
     2: 'grid grid-cols-1 lg:grid-cols-2 gap-8',
-    3: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
-    4: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
+    3: 'grid grid-cols-1 gap-8',
+    4: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
+    5: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
   };
 
   const chartRenderers: Record<ExcelChartId, () => React.ReactNode> = {
@@ -309,6 +313,9 @@ const App: React.FC = () => {
     ),
     'group-revenue': () => (
       <GroupAnalysis title={derivedData.groupRevenueTitle} data={derivedData.revenueGroupData} type="revenue" />
+    ),
+    'signed-contract-list': () => (
+      <SignedContractList rows={derivedData.signedContractRows} title={derivedData.signedContractTitle} />
     ),
     opportunity: () => (
       <div className="col-span-1 lg:col-span-3">

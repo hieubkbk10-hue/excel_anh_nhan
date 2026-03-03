@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
-import { ExcelChartSpec, ExcelData, ExcelTextConfig } from '../types';
-import { EXCEL_CHART_SPECS, EXCEL_FILE_URL } from './excel-spec';
+import { ExcelChartSpec, ExcelData, ExcelTextConfig, SignedContractRow } from '../types';
+import { EXCEL_CHART_SPECS, EXCEL_FILE_URL, HD_Thucte_SHEET } from './excel-spec';
 
 export async function loadExcelData(): Promise<ExcelData> {
   const excelUrl = EXCEL_FILE_URL.trim();
@@ -10,7 +10,8 @@ export async function loadExcelData(): Promise<ExcelData> {
   const workbook = await loadWorkbook(excelUrl);
   const charts = buildCharts(workbook, EXCEL_CHART_SPECS);
   const texts = buildTexts(EXCEL_CHART_SPECS);
-  return { charts, texts };
+  const contractsSigned = buildSignedContracts(workbook, HD_Thucte_SHEET);
+  return { charts, texts, contractsSigned };
 }
 
 async function loadWorkbook(url: string): Promise<XLSX.WorkBook> {
@@ -42,6 +43,37 @@ function buildTexts(specs: ExcelChartSpec[]): ExcelData['texts'] {
     texts[spec.id] = resolved;
   }
   return texts;
+}
+
+function buildSignedContracts(workbook: XLSX.WorkBook, sheetName: string): SignedContractRow[] {
+  const sheet = workbook.Sheets[sheetName];
+  if (!sheet) return [];
+  const sheetRange = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1');
+  const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
+    header: 1,
+    range: { s: { r: 1, c: 0 }, e: { r: sheetRange.e.r, c: 5 } },
+    defval: '',
+    raw: false
+  });
+
+  return rows
+    .map((row) => {
+      const [group, customer, contractNo, content, value, contractDate] = row ?? [];
+      const normalizedGroup = String(group ?? '').trim();
+      const normalizedCustomer = String(customer ?? '').trim();
+      const normalizedContractNo = String(contractNo ?? '').trim();
+      const normalizedContent = String(content ?? '').trim();
+      const normalizedDate = String(contractDate ?? '').trim();
+      return {
+        group: normalizedGroup,
+        customer: normalizedCustomer,
+        contractNo: normalizedContractNo,
+        content: normalizedContent,
+        value: toNumber(value),
+        contractDate: normalizedDate
+      };
+    })
+    .filter((row) => row.group || row.customer || row.contractNo || row.content || row.value || row.contractDate);
 }
 
 function evaluateChart(spec: ExcelChartSpec, workbook: XLSX.WorkBook): Record<string, number> {
