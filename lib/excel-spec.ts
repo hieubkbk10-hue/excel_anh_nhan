@@ -153,7 +153,7 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     id: 'donut-revenue',
     sheet: DEFAULT_SHEET,
     texts: {
-      title: 'Nguồn Doanh Thu'
+      title: 'Cơ cấu doanh thu'
     },
     metrics: {
       signed: 'O35',
