@@ -177,6 +177,12 @@ const App: React.FC = () => {
         'Chi tiết danh sách hợp đồng đã ký'
       ),
       signedContractRows: excelData.contractsSigned,
+      signedRevenueTitle: getText(
+        'signed-revenue-list',
+        'title',
+        'Chi tiết danh sách doanh thu'
+      ),
+      signedRevenueRows: excelData.revenuesSigned,
       opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
       donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
@@ -210,7 +216,8 @@ const App: React.FC = () => {
     2: 'grid grid-cols-1 lg:grid-cols-2 gap-8',
     3: 'grid grid-cols-1 gap-8',
     4: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
-    5: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
+    5: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
+    6: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
   };
 
   const chartRenderers: Record<ExcelChartId, () => React.ReactNode> = {
@@ -320,6 +327,9 @@ const App: React.FC = () => {
     ),
     'signed-contract-list': () => (
       <SignedContractList rows={derivedData.signedContractRows} title={derivedData.signedContractTitle} />
+    ),
+    'signed-revenue-list': () => (
+      <SignedContractList rows={derivedData.signedRevenueRows} title={derivedData.signedRevenueTitle} />
     ),
     opportunity: () => (
       <div className="col-span-1 lg:col-span-3">

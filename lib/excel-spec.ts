@@ -3,6 +3,7 @@ import { ExcelChartSpec, ExcelLayoutConfig } from '../types';
 export const EXCEL_FILE_URL = '/input.xlsx';
 const DEFAULT_SHEET = 'TH_2026';
 export const HD_Thucte_SHEET = 'HD_Thucte';
+export const DT_Thucte_SHEET = 'DT_Thucte';
 
 export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
   {
@@ -91,6 +92,14 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     metrics: {}
   },
   {
+    id: 'signed-revenue-list',
+    sheet: DT_Thucte_SHEET,
+    texts: {
+      title: 'Chi tiết danh sách doanh thu'
+    },
+    metrics: {}
+  },
+  {
     id: 'opportunity',
     sheet: DEFAULT_SHEET,
     texts: {
@@ -141,7 +150,8 @@ export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
     { order: 1, items: ['kpi-contract', 'kpi-revenue', 'forecast'] },
     { order: 2, items: ['group-contract', 'group-revenue'] },
     { order: 3, items: ['signed-contract-list'] },
-    { order: 4, items: ['opportunity'] },
-    { order: 5, items: ['donut-contract', 'donut-revenue'] }
+    { order: 4, items: ['signed-revenue-list'] },
+    { order: 5, items: ['opportunity'] },
+    { order: 6, items: ['donut-contract', 'donut-revenue'] }
   ]
 };
