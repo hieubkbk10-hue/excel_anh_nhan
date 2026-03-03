@@ -10,6 +10,7 @@ interface SignedContractListProps {
 
 type ColumnKey = 'group' | 'customer' | 'contractNo' | 'content' | 'value' | 'contractDate';
 type SortDirection = 'asc' | 'desc';
+type FilterKey = Exclude<ColumnKey, 'group'>;
 
 const columnLabels: Record<ColumnKey, string> = {
   group: 'NHÓM',
@@ -23,8 +24,7 @@ const columnLabels: Record<ColumnKey, string> = {
 const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) => {
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [sortState, setSortState] = useState<{ key: ColumnKey; direction: SortDirection } | null>(null);
-  const [columnFilters, setColumnFilters] = useState<Record<ColumnKey, string>>({
-    group: '',
+  const [columnFilters, setColumnFilters] = useState<Record<FilterKey, string>>({
     customer: '',
     contractNo: '',
     content: '',
@@ -42,7 +42,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
   const filteredRows = useMemo(() => {
     const baseRows = selectedGroup === 'all' ? rows : rows.filter((row) => row.group === selectedGroup);
     return baseRows.filter((row) => {
-      return (Object.keys(columnFilters) as ColumnKey[]).every((key) => {
+      return (Object.keys(columnFilters) as FilterKey[]).every((key) => {
         const query = columnFilters[key].trim().toLowerCase();
         if (!query) return true;
         if (key === 'value') {
@@ -90,7 +90,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
     }));
   }, [sortedRows]);
 
-  const handleFilterChange = (key: ColumnKey, value: string) => {
+  const handleFilterChange = (key: FilterKey, value: string) => {
     setColumnFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -116,21 +116,6 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
       <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50/40">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base font-semibold uppercase text-slate-700">{title}</CardTitle>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-500">Nhóm</span>
-            <select
-              value={selectedGroup}
-              onChange={(event) => setSelectedGroup(event.target.value)}
-              className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
-            >
-              <option value="all">Tất cả</option>
-              {groupOptions.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
@@ -152,8 +137,8 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
           ))}
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
+        <div className="rounded-lg border border-slate-200">
+          <table className="w-full table-fixed divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
                 {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
@@ -161,7 +146,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
                     key={key}
                     className={`px-4 py-3 text-left font-semibold whitespace-nowrap ${
                       key === 'value' ? 'text-right' : ''
-                    }`}
+                    } ${key === 'customer' ? 'w-48' : ''} ${key === 'content' ? 'w-56' : ''}`}
                   >
                     <button
                       type="button"
@@ -177,12 +162,27 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
               <tr className="bg-white">
                 {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
                   <th key={`filter-${key}`} className="px-4 py-2">
-                    <input
-                      value={columnFilters[key]}
-                      onChange={(event) => handleFilterChange(key, event.target.value)}
-                      placeholder={`Tìm ${columnLabels[key].toLowerCase()}`}
-                      className="h-8 w-full rounded-md border border-slate-200 px-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                    />
+                    {key === 'group' ? (
+                      <select
+                        value={selectedGroup}
+                        onChange={(event) => setSelectedGroup(event.target.value)}
+                        className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      >
+                        <option value="all">Tất cả</option>
+                        {groupOptions.map((group) => (
+                          <option key={group} value={group}>
+                            {group}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={columnFilters[key as FilterKey]}
+                        onChange={(event) => handleFilterChange(key as FilterKey, event.target.value)}
+                        placeholder={`Tìm ${columnLabels[key].toLowerCase()}`}
+                        className="h-8 w-full rounded-md border border-slate-200 px-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                      />
+                    )}
                   </th>
                 ))}
               </tr>
@@ -191,9 +191,13 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
               {sortedRows.map((row, index) => (
                 <tr key={`${row.contractNo}-${index}`} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
-                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.customer}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-48">
+                    {row.customer}
+                  </td>
                   <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.contractNo}</td>
-                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.content}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-56">
+                    {row.content}
+                  </td>
                   <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
                     {formatCurrencyFull(row.value)}
                   </td>
