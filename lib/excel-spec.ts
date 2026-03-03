@@ -15,7 +15,7 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
       title: 'BÁO CÁO HOẠT ĐỘNG KDPM'
     },
     metrics: {
-      contractPlan: 'L16',
+      contractPlan: 'L17',
       revenuePlan: 'N35'
     }
   },
