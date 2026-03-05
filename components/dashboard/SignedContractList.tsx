@@ -4,6 +4,11 @@ import { SignedContractRow } from '../../types';
 import { formatCurrencyFull } from '../../lib/utils';
 import { ChevronDown } from 'lucide-react';
 
+const formatDate = (dateText: string) => {
+  const [day, month, year] = dateText.split('/').map((part) => part.padStart(2, '0'));
+  return `${day}/${month}/${year}`;
+};
+
 interface SignedContractListProps {
   rows: SignedContractRow[];
   title: string;
@@ -156,8 +161,20 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
                     <th
                       key={key}
                       className={`px-4 py-3 text-left font-semibold whitespace-nowrap ${
-                        key === 'value' ? 'text-right' : ''
-                      } ${key === 'customer' ? 'w-48' : ''} ${key === 'content' ? 'w-56' : ''}`}
+                        key === 'value' || key === 'contractDate' ? 'text-right' : ''
+                      } ${
+                        key === 'group'
+                          ? 'w-16'
+                          : key === 'customer'
+                            ? 'w-48'
+                            : key === 'content'
+                              ? 'w-56'
+                              : key === 'value'
+                                ? 'w-28'
+                                : key === 'contractDate'
+                                  ? 'w-24'
+                                  : ''
+                      }`}
                     >
                       <button
                         type="button"
@@ -212,7 +229,9 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
                     <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
                       {formatCurrencyFull(row.value)}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.contractDate}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-slate-600 whitespace-nowrap">
+                      {formatDate(row.contractDate)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
