@@ -386,8 +386,9 @@ function formatExcelDateToDDMMYYYY(value: unknown): string {
   const normalized = raw.replace(/-/g, '/');
   const parts = normalized.split('/').map((part) => part.trim()).filter(Boolean);
   if (parts.length === 3) {
-    const day = Number(parts[0]);
-    const month = Number(parts[1]);
+    // Excel format is MM/DD/YYYY, convert to DD/MM/YYYY
+    const month = Number(parts[0]);
+    const day = Number(parts[1]);
     let year = Number(parts[2]);
     if (year < 100) year += 2000;
     if (Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)) {
