@@ -103,7 +103,7 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     <div className="col-span-1 lg:col-span-3">
         <div className="flex items-center gap-3 mb-5 px-1">
             <PieChartIcon className="text-slate-500" size={24} />
-            <h3 className="text-xl font-bold text-slate-800">Cơ cấu HĐ-DT</h3>
+            <h3 className="text-xl font-bold text-slate-800">Cơ cấu phân bổ</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <DonutChartWithLegend 
