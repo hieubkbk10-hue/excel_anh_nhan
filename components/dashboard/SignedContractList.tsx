@@ -170,9 +170,9 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
                             : key === 'content'
                               ? 'w-56'
                               : key === 'value'
-                                ? 'w-28'
+                                ? 'w-48'
                                 : key === 'contractDate'
-                                  ? 'w-24'
+                                  ? 'w-48'
                                   : ''
                       }`}
                     >
