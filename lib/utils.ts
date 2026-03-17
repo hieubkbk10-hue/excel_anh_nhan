@@ -17,7 +17,8 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatCurrencyFull(amount: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'decimal',
-    }).format(amount);
-  }
+  return new Intl.NumberFormat('vi-VN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}

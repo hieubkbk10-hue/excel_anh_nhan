@@ -7,7 +7,7 @@ import SignedContractList from './SignedContractList';
 import OpportunitySourceList from './OpportunitySourceList';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Clock } from 'lucide-react';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatCurrencyFull } from '../../lib/utils';
 import { EXCEL_LAYOUT_CONFIG } from '../../lib/excel-spec';
 import { buildRenderRows } from '../../lib/layout-order';
 import { DonutDataItem, ExcelChartId, ExcelData, GroupData, OpportunityChartItem } from '../../types';
@@ -221,8 +221,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
               {derivedData.headerTitle}
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-1">
-              Kế hoạch năm: Hợp đồng: {formatCurrency(derivedData.headerContractPlan)} | Doanh thu: {' '}
-              {formatCurrency(derivedData.headerRevenuePlan)}
+              Kế hoạch năm: Hợp đồng: {formatCurrencyFull(derivedData.headerContractPlan)} VNĐ | Doanh thu: {' '}
+              {formatCurrencyFull(derivedData.headerRevenuePlan)} VNĐ
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-md">
