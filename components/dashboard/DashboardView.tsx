@@ -221,7 +221,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
               {derivedData.headerTitle}
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-1">
-              Kế hoạch năm: Hợp đồng: {formatCurrencyFull(derivedData.headerContractPlan)} VNĐ | Doanh thu: {' '}
+              Kế hoạch năm: HĐ: {formatCurrencyFull(derivedData.headerContractPlan)} VNĐ | DT: {' '}
               {formatCurrencyFull(derivedData.headerRevenuePlan)} VNĐ
             </p>
           </div>
