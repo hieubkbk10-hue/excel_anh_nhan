@@ -58,7 +58,7 @@ const KPICard: React.FC<KPICardProps> = ({
               {(currentValue / 1_000_000_000).toFixed(2)}
             </span>
             <span className="text-lg text-muted-foreground font-medium">
-              / {(targetValue / 1_000_000_000).toFixed(0)} tỷ
+              / {(targetValue / 1_000_000_000).toFixed(2)} tỷ
             </span>
           </div>
           <div className="flex items-center gap-2">
