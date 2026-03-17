@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { cn, formatCurrency, formatCurrencyFull } from '../../lib/utils';
+import { cn, formatCurrency, formatCurrencyFull, formatInBillions } from '../../lib/utils';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { DonutDataItem } from '../../types';
 
@@ -106,26 +106,26 @@ const DonutSection: React.FC<DonutSectionProps> = ({
             <h3 className="text-xl font-bold text-slate-800">Cơ cấu phân bổ</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <DonutChartWithLegend 
-                title={contractTitle} 
-                data={contractData} 
-                colors={COLORS} 
+            <DonutChartWithLegend
+                title={contractTitle}
+                data={contractData}
+                colors={COLORS}
                 totalLabel="Tổng hợp đồng"
-                totalValue={formatCurrency(contractTotal)}
+                totalValue={formatInBillions(contractTotal)}
             />
-            <DonutChartWithLegend 
-                title={revenueSourceTitle} 
-                data={revenueSourceData} 
-                colors={COLORS} 
+            <DonutChartWithLegend
+                title={revenueSourceTitle}
+                data={revenueSourceData}
+                colors={COLORS}
                 totalLabel="Tổng doanh thu"
-                totalValue={formatCurrency(revenueSourceTotal)}
+                totalValue={formatInBillions(revenueSourceTotal)}
             />
-            <DonutChartWithLegend 
-                title={revenueTitle} 
-                data={revenueData} 
-                colors={REVENUE_COLORS} 
+            <DonutChartWithLegend
+                title={revenueTitle}
+                data={revenueData}
+                colors={REVENUE_COLORS}
                 totalLabel="Tổng doanh thu"
-                totalValue={formatCurrency(revenueTotal)}
+                totalValue={formatInBillions(revenueTotal)}
             />
         </div>
     </div>

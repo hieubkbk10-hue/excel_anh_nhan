@@ -22,3 +22,11 @@ export function formatCurrencyFull(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export function formatInBillions(amount: number): string {
+  const value = amount / 1_000_000_000;
+  return new Intl.NumberFormat('vi-VN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value) + ' tỷ';
+}
