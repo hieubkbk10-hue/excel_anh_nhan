@@ -9,8 +9,9 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-    notation: "compact", 
+    notation: "compact",
     compactDisplay: "short"
   }).format(amount).replace('₫', '').trim() + ' tỷ';
 }
