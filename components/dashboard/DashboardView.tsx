@@ -221,7 +221,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
               {derivedData.headerTitle}
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-1">
-              Kế hoạch năm: Hợp đồng {formatCurrency(derivedData.headerContractPlan)} | Doanh thu{' '}
+              Kế hoạch năm: Hợp đồng: {formatCurrency(derivedData.headerContractPlan)} | Doanh thu: {' '}
               {formatCurrency(derivedData.headerRevenuePlan)}
             </p>
           </div>
@@ -275,7 +275,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-base font-medium text-slate-600">Hợp đồng dự kiến</span>
-                <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                <span className="text-medium font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
                   {contractForecastPercent.toFixed(1)}%
                 </span>
               </div>
@@ -283,7 +283,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
                 <span className="text-4xl font-bold text-slate-900">
                   {(derivedData.contractForecast / 1_000_000_000).toFixed(2)}
                 </span>
-                <span className="text-lg text-slate-500 font-medium">Tỷ</span>
+                <span className="text-lg text-slate-500 font-medium">tỷ</span>
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-500" style={{ width: `${contractForecastPercentClamped}%` }}></div>
@@ -293,7 +293,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-base font-medium text-slate-600">Doanh thu dự kiến</span>
-                <span className="text-sm font-bold text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full">
+                <span className="text-medium font-bold text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full">
                   {revenueForecastPercent.toFixed(1)}%
                 </span>
               </div>
@@ -301,7 +301,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
                 <span className="text-4xl font-bold text-slate-900">
                   {(derivedData.revenueForecast / 1_000_000_000).toFixed(2)}
                 </span>
-                <span className="text-lg text-slate-500 font-medium">Tỷ</span>
+                <span className="text-lg text-slate-500 font-medium">tỷ</span>
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-teal-500" style={{ width: `${revenueForecastPercentClamped}%` }}></div>
