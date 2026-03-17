@@ -69,7 +69,7 @@ const DonutChartWithLegend = ({
                                 <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: colors[index % colors.length] }}></div>
                                 <span className="text-slate-600 font-medium">{entry.name}</span>
                             </div>
-                            <span className={valueClassName}>{formatCurrencyFull(entry.value)} VNĐ</span>
+                            <span className={cn(valueClassName, "text-right tabular-nums")}>{formatCurrencyFull(entry.value)} VNĐ</span>
                         </div>
                     ))}
                 </div>
