@@ -9,18 +9,20 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b']; // Blue, Emerald, Amber
 
 const REVENUE_COLORS = ['#1e293b', '#10b981']; // Slate-800, Emerald-500
 
-const DonutChartWithLegend = ({ 
-    title, 
+const DonutChartWithLegend = ({
+    title,
     data,
-    colors, 
-    totalLabel, 
-    totalValue 
-}: { 
-    title: string, 
-    data: DonutDataItem[], 
-    colors: string[], 
-    totalLabel: string, 
-    totalValue: string 
+    colors,
+    totalLabel,
+    totalValue,
+    valueClassName = "font-bold text-slate-800"
+}: {
+    title: string,
+    data: DonutDataItem[],
+    colors: string[],
+    totalLabel: string,
+    totalValue: string,
+    valueClassName?: string
 }) => {
     return (
         <Card className="h-full border-slate-200 shadow-sm">
@@ -67,7 +69,7 @@ const DonutChartWithLegend = ({
                                 <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: colors[index % colors.length] }}></div>
                                 <span className="text-slate-600 font-medium">{entry.name}</span>
                             </div>
-                            <span className="font-bold text-slate-800">{formatCurrencyFull(entry.value)} VNĐ</span>
+                            <span className={valueClassName}>{formatCurrencyFull(entry.value)} VNĐ</span>
                         </div>
                     ))}
                 </div>
@@ -112,6 +114,7 @@ const DonutSection: React.FC<DonutSectionProps> = ({
                 colors={COLORS}
                 totalLabel="Tổng hợp đồng"
                 totalValue={formatInBillions(contractTotal)}
+                valueClassName="font-bold text-slate-800 text-base"
             />
             <DonutChartWithLegend
                 title={revenueSourceTitle}
@@ -119,6 +122,7 @@ const DonutSection: React.FC<DonutSectionProps> = ({
                 colors={COLORS}
                 totalLabel="Tổng doanh thu"
                 totalValue={formatInBillions(revenueSourceTotal)}
+                valueClassName="font-bold text-slate-800 text-base"
             />
             <DonutChartWithLegend
                 title={revenueTitle}
@@ -126,6 +130,7 @@ const DonutSection: React.FC<DonutSectionProps> = ({
                 colors={REVENUE_COLORS}
                 totalLabel="Tổng doanh thu"
                 totalValue={formatInBillions(revenueTotal)}
+                valueClassName="font-bold text-slate-800"
             />
         </div>
     </div>
