@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, LabelList } from 'recharts';
 import { OpportunityChartItem } from '../../types';
+import { formatCurrencyFull } from '../../lib/utils';
 import { TrendingUp } from 'lucide-react';
 
 interface OpportunityChartProps {
@@ -10,7 +11,7 @@ interface OpportunityChartProps {
 }
 
 const OpportunityChart: React.FC<OpportunityChartProps> = ({ data, title }) => {
-  const formatValue = (val: number) => (val ? val.toLocaleString('vi-VN') : '');
+  const formatValue = (val: number) => (val ? formatCurrencyFull(val) : '');
   const tickFormatter = (value: string) => {
     const item = data.find((entry) => entry.label === value);
     if (!item) return '';
@@ -54,10 +55,10 @@ const OpportunityChart: React.FC<OpportunityChartProps> = ({ data, title }) => {
                     tick={{ fontWeight: 600, fontSize: 14, fill: '#334155' }}
                     tickFormatter={tickFormatter}
                 />
-                <Tooltip 
+                <Tooltip
                     cursor={{fill: 'transparent'}}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '14px' }}
-                    formatter={(value: number) => (value ? value.toLocaleString('vi-VN') : null)}
+                    formatter={(value: number) => (value ? formatCurrencyFull(value) + ' VNĐ' : null)}
                     filterNull
                     labelFormatter={labelFormatter}
                 />

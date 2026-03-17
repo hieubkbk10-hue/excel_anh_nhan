@@ -95,9 +95,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
     ];
 
     const buildOpportunityRows = (group: string, prefix: string): OpportunityChartItem[] => {
-      const newContract = getMetric(opportunityMetrics, `${prefix}NewContract`) / 1_000_000;
-      const signedRevenue = getMetric(opportunityMetrics, `${prefix}RevenueSigned`) / 1_000_000;
-      const newRevenue = getMetric(opportunityMetrics, `${prefix}RevenueNew`) / 1_000_000;
+      const newContract = getMetric(opportunityMetrics, `${prefix}NewContract`);
+      const signedRevenue = getMetric(opportunityMetrics, `${prefix}RevenueSigned`);
+      const newRevenue = getMetric(opportunityMetrics, `${prefix}RevenueNew`);
 
       return [
         {
@@ -186,7 +186,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         'Nguồn dự án tìm năng'
       ),
       opportunitySourceRows: excelData.opportunitySources,
-      opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm (Tr)'),
+      opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
       donutRevenueSourceTitle: getText('donut-revenue-source', 'title', 'Nguồn doanh thu'),
       donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
