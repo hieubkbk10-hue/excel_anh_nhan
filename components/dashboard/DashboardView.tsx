@@ -351,6 +351,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         contractTitle={derivedData.donutContractTitle}
         revenueTitle={derivedData.donutRevenueTitle}
         revenueSourceTitle={derivedData.donutRevenueSourceTitle}
+        contractsSigned={derivedData.signedContractRows}
+        revenuesSigned={derivedData.signedRevenueRows}
+        revenuesFromSignedContracts={derivedData.signedRevenueFromSignedContractRows}
       />
     ),
     'donut-revenue-source': () => null,
