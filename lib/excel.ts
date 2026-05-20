@@ -148,7 +148,7 @@ function buildOpportunitySources(workbook: XLSX.WorkBook, sheetName: string): Op
 
   return rows
     .map((row) => {
-      const [group, customer, type, project, priority, contractMonth, contractValue, revenue1, , revenue2, , revenue3] =
+      const [group, customer, type, project, priority, contractMonth, contractValue, revenue1, dtMonth1, revenue2, dtMonth2, revenue3, dtMonth3] =
         row ?? [];
       const normalizedGroup = String(group ?? '').trim();
       const normalizedCustomer = String(customer ?? '').trim();
@@ -157,7 +157,10 @@ function buildOpportunitySources(workbook: XLSX.WorkBook, sheetName: string): Op
       const normalizedPriority = String(priority ?? '').trim();
       const normalizedMonth = String(contractMonth ?? '').trim();
       const valueContract = toNumber(contractValue);
-      const valueRevenue = toNumber(revenue1) + toNumber(revenue2) + toNumber(revenue3);
+      const dt1 = toNumber(revenue1);
+      const dt2 = toNumber(revenue2);
+      const dt3 = toNumber(revenue3);
+      const valueRevenue = dt1 + dt2 + dt3;
       return {
         group: normalizedGroup,
         customer: normalizedCustomer,
@@ -166,7 +169,13 @@ function buildOpportunitySources(workbook: XLSX.WorkBook, sheetName: string): Op
         priority: normalizedPriority,
         contractMonth: normalizedMonth,
         contractValue: valueContract,
-        revenueValue: valueRevenue
+        revenueValue: valueRevenue,
+        dt1,
+        dtMonth1: String(dtMonth1 ?? '').trim(),
+        dt2,
+        dtMonth2: String(dtMonth2 ?? '').trim(),
+        dt3,
+        dtMonth3: String(dtMonth3 ?? '').trim()
       };
     })
     .filter(

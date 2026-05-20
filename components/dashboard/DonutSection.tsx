@@ -1,14 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn, formatCurrencyFull, formatInBillions } from '../../lib/utils';
 import { PieChart as PieChartIcon } from 'lucide-react';
-import { DonutDataItem, SignedContractRow } from '../../types';
+import { DonutDataItem, OpportunitySourceRow, SignedContractRow } from '../../types';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b']; // Blue, Emerald, Amber
 const REVENUE_COLORS = ['#1e293b', '#10b981']; // Slate-800, Emerald-500
-
-const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 /** Lấy tháng từ contractDate dạng DD/MM/YYYY */
 function getMonth(contractDate: string): number {
@@ -96,6 +94,9 @@ interface DonutSectionProps {
   contractsSigned: SignedContractRow[];
   revenuesSigned: SignedContractRow[];
   revenuesFromSignedContracts: SignedContractRow[];
+  opportunitySources: OpportunitySourceRow[];
+  selectedMonths: number[];
+  onSelectedMonthsChange: (months: number[]) => void;
 }
 
 const DonutSection: React.FC<DonutSectionProps> = ({
@@ -110,14 +111,11 @@ const DonutSection: React.FC<DonutSectionProps> = ({
   revenueSourceTitle,
   contractsSigned,
   revenuesSigned,
-  revenuesFromSignedContracts
+  revenuesFromSignedContracts,
+  opportunitySources,
+  selectedMonths,
+  onSelectedMonthsChange
 }) => {
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-
-  const toggleMonth = (m: number) =>
-    setSelectedMonths((prev) =>
-      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]
-    );
 
   const filtered = useMemo(() => {
     if (selectedMonths.length === 0) {
@@ -127,25 +125,48 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     const filterRows = (rows: SignedContractRow[]) =>
       rows.filter((r) => selectedMonths.includes(getMonth(r.contractDate)));
 
-    const filteredContracts = filterRows(contractsSigned);
+    const parseMonth = (s: string) => parseInt(s.replace(/\D/g, ''), 10);
+
+    const filteredOpportunities = opportunitySources.filter((r) => {
+      const m = parseMonth(r.contractMonth);
+      return selectedMonths.includes(m);
+    });
     const filteredRevenues = filterRows(revenuesSigned);
     const filteredRevenuesFromSigned = filterRows(revenuesFromSignedContracts);
 
-    const sumByGroup = (rows: SignedContractRow[], group: string) =>
-      rows.filter((r) => r.group.toUpperCase() === group).reduce((s, r) => s + r.value, 0);
+    const sumOppByGroup = (group: string) =>
+      filteredOpportunities
+        .filter((r) => r.group.toUpperCase() === group)
+        .reduce((s, r) => s + r.contractValue, 0);
 
-    const cITO = sumByGroup(filteredContracts, 'ITO');
-    const cUNI = sumByGroup(filteredContracts, 'UNI');
-    const cG2B = sumByGroup(filteredContracts, 'G2B');
+    const cITO = sumOppByGroup('ITO');
+    const cUNI = sumOppByGroup('UNI');
+    const cG2B = sumOppByGroup('G2B');
     const cTotal = cITO + cUNI + cG2B;
 
-    const rsITO = sumByGroup(filteredRevenues, 'ITO');
-    const rsUNI = sumByGroup(filteredRevenues, 'UNI');
-    const rsG2B = sumByGroup(filteredRevenues, 'G2B');
+    // revenueSource: tính từ opportunitySources theo tháng DT thực tế (dt1/dt2/dt3)
+    const sumDtByGroup = (group: string) =>
+      opportunitySources
+        .filter((r) => r.group.toUpperCase() === group)
+        .reduce((s, r) => {
+          return s +
+            (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
+            (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
+            (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0);
+        }, 0);
+
+    const rsITO = sumDtByGroup('ITO');
+    const rsUNI = sumDtByGroup('UNI');
+    const rsG2B = sumDtByGroup('G2B');
     const rsTotal = rsITO + rsUNI + rsG2B;
 
     const rSigned = filteredRevenuesFromSigned.reduce((s, r) => s + r.value, 0);
-    const rNew = filteredRevenues.reduce((s, r) => s + r.value, 0);
+    const rNew = opportunitySources.reduce((s, r) => {
+      return s +
+        (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
+        (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
+        (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0);
+    }, 0);
     const rTotal = rSigned + rNew;
 
     return {
@@ -171,67 +192,72 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     selectedMonths,
     contractData, revenueSourceData, revenueData,
     contractTotal, revenueSourceTotal, revenueTotal,
-    contractsSigned, revenuesSigned, revenuesFromSignedContracts
+    opportunitySources, revenuesSigned, revenuesFromSignedContracts
   ]);
 
   return (
     <div className="col-span-1 lg:col-span-3">
-      <div className="flex flex-wrap items-center gap-3 mb-4 px-1">
-        <div className="flex items-center gap-3">
-          <PieChartIcon className="text-slate-500" size={24} />
-          <h3 className="text-xl font-bold text-slate-800">Cơ cấu phân bổ</h3>
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5 ml-2">
-          {MONTHS.map((m) => (
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 border-b border-blue-100 bg-blue-50">
+          <div className="flex flex-wrap items-center gap-2">
+            <PieChartIcon className="text-blue-600 shrink-0" size={18} />
+            <CardTitle className="text-sm font-bold uppercase tracking-wide text-blue-700 mr-1">
+              Cơ cấu phân bổ:
+            </CardTitle>
             <button
-              key={m}
-              onClick={() => toggleMonth(m)}
-              className={cn(
-                'px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-colors',
-                selectedMonths.includes(m)
+              onClick={() => onSelectedMonthsChange([])}
+              className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
+                selectedMonths.length === 0
                   ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-slate-500 border-slate-300 hover:border-blue-400 hover:text-blue-600'
-              )}
+                  : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400 hover:text-blue-600'
+              }`}
             >
-              T{m}
+              Tất cả
             </button>
-          ))}
-          {selectedMonths.length > 0 && (
-            <button
-              onClick={() => setSelectedMonths([])}
-              className="px-2.5 py-0.5 rounded-full text-xs font-semibold border border-slate-300 bg-white text-slate-400 hover:text-red-500 hover:border-red-400 transition-colors"
-            >
-              Xóa
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <DonutChartWithLegend
-          title={contractTitle}
-          data={filtered.contractData}
-          colors={COLORS}
-          totalLabel="Tổng hợp đồng"
-          totalValue={formatInBillions(filtered.contractTotal)}
-          valueClassName="font-bold text-slate-800 text-base"
-        />
-        <DonutChartWithLegend
-          title={revenueSourceTitle}
-          data={filtered.revenueSourceData}
-          colors={COLORS}
-          totalLabel="Tổng doanh thu"
-          totalValue={formatInBillions(filtered.revenueSourceTotal)}
-          valueClassName="font-bold text-slate-800 text-base"
-        />
-        <DonutChartWithLegend
-          title={revenueTitle}
-          data={filtered.revenueData}
-          colors={REVENUE_COLORS}
-          totalLabel="Tổng doanh thu"
-          totalValue={formatInBillions(filtered.revenueTotal)}
-          valueClassName="font-bold text-slate-800"
-        />
-      </div>
+            {[1,2,3,4,5,6,7,8,9,10,11,12].map((m) => (
+              <button
+                key={m}
+                onClick={() => onSelectedMonthsChange(selectedMonths.includes(m) ? selectedMonths.filter((x) => x !== m) : [...selectedMonths, m])}
+                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
+                  selectedMonths.includes(m)
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400 hover:text-blue-600'
+                }`}
+              >
+                T{m}
+              </button>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <DonutChartWithLegend
+              title={contractTitle}
+              data={filtered.contractData}
+              colors={COLORS}
+              totalLabel="Tổng hợp đồng"
+              totalValue={formatInBillions(filtered.contractTotal)}
+              valueClassName="font-bold text-slate-800 text-base"
+            />
+            <DonutChartWithLegend
+              title={revenueSourceTitle}
+              data={filtered.revenueSourceData}
+              colors={COLORS}
+              totalLabel="Tổng doanh thu"
+              totalValue={formatInBillions(filtered.revenueSourceTotal)}
+              valueClassName="font-bold text-slate-800 text-base"
+            />
+            <DonutChartWithLegend
+              title={revenueTitle}
+              data={filtered.revenueData}
+              colors={REVENUE_COLORS}
+              totalLabel="Tổng doanh thu"
+              totalValue={formatInBillions(filtered.revenueTotal)}
+              valueClassName="font-bold text-slate-800"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

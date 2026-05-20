@@ -7,6 +7,9 @@ import { ChevronDown } from 'lucide-react';
 interface OpportunitySourceListProps {
   rows: OpportunitySourceRow[];
   title: string;
+  filterMonths?: number[];
+  hideColumns?: ColumnKey[];
+  filterByContractMonth?: boolean;
 }
 
 type ColumnKey =
@@ -32,7 +35,24 @@ const columnLabels: Record<ColumnKey, string> = {
   revenueValue: 'GIÁ TRỊ DT'
 };
 
-const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, title }) => {
+const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, title, filterMonths, hideColumns = [], filterByContractMonth = false }) => {
+  const visibleColumns = (Object.keys(columnLabels) as ColumnKey[]).filter((k) => !hideColumns.includes(k));
+  const baseRows = useMemo(() => {
+    if (!filterMonths || filterMonths.length === 0) return rows;
+    const parseMonth = (s: string) => parseInt(s.replace(/\D/g, ''), 10);
+    if (filterByContractMonth) {
+      return rows.filter((row) => filterMonths.includes(parseMonth(row.contractMonth)));
+    }
+    return rows
+      .map((row) => {
+        const rv =
+          (filterMonths.includes(parseMonth(row.dtMonth1)) ? row.dt1 : 0) +
+          (filterMonths.includes(parseMonth(row.dtMonth2)) ? row.dt2 : 0) +
+          (filterMonths.includes(parseMonth(row.dtMonth3)) ? row.dt3 : 0);
+        return { ...row, revenueValue: rv };
+      })
+      .filter((row) => row.revenueValue > 0);
+  }, [rows, filterMonths, filterByContractMonth]);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
@@ -47,27 +67,27 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
   });
 
   const groupOptions = useMemo(() => {
-    const groups = Array.from(new Set(rows.map((row) => row.group).filter(Boolean))) as string[];
+    const groups = Array.from(new Set(baseRows.map((row) => row.group).filter(Boolean))) as string[];
     return groups.sort((a, b) => a.localeCompare(b, 'vi-VN'));
-  }, [rows]);
+  }, [baseRows]);
 
   const typeOptions = useMemo(() => {
-    const types = Array.from(new Set(rows.map((row) => row.type).filter(Boolean))) as string[];
+    const types = Array.from(new Set(baseRows.map((row) => row.type).filter(Boolean))) as string[];
     return types.sort((a, b) => a.localeCompare(b, 'vi-VN'));
-  }, [rows]);
+  }, [baseRows]);
 
   const priorityOptions = useMemo(() => {
-    const priorities = Array.from(new Set(rows.map((row) => row.priority).filter(Boolean))) as string[];
+    const priorities = Array.from(new Set(baseRows.map((row) => row.priority).filter(Boolean))) as string[];
     return priorities.sort((a, b) => a.localeCompare(b, 'vi-VN'));
-  }, [rows]);
+  }, [baseRows]);
 
   const contractMonthOptions = useMemo(() => {
-    const months = Array.from(new Set(rows.map((row) => row.contractMonth).filter(Boolean))) as string[];
+    const months = Array.from(new Set(baseRows.map((row) => row.contractMonth).filter(Boolean))) as string[];
     return months.sort((a, b) => a.localeCompare(b, 'vi-VN'));
-  }, [rows]);
+  }, [baseRows]);
 
   const filteredRows = useMemo(() => {
-    const baseRows = rows.filter((row) => {
+    const preFiltered = baseRows.filter((row) => {
       if (selectedGroup !== 'all' && row.group !== selectedGroup) return false;
       if (selectedType !== 'all' && row.type !== selectedType) return false;
       if (selectedPriority !== 'all' && row.priority !== selectedPriority) return false;
@@ -75,7 +95,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
       return true;
     });
 
-    return baseRows.filter((row) => {
+    return preFiltered.filter((row) => {
       return (Object.keys(columnFilters) as FilterKey[]).every((key) => {
         const query = columnFilters[key].trim().toLowerCase();
         if (!query) return true;
@@ -85,7 +105,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
         return String(row[key] ?? '').toLowerCase().includes(query);
       });
     });
-  }, [rows, selectedGroup, selectedType, selectedPriority, selectedContractMonth, columnFilters]);
+  }, [baseRows, selectedGroup, selectedType, selectedPriority, selectedContractMonth, columnFilters]);
 
   const sortedRows = useMemo(() => {
     if (!sortState) return filteredRows;
@@ -231,26 +251,11 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
       </CardHeader>
       {!isCollapsed && (
         <CardContent className="pt-6 space-y-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="flex flex-wrap gap-3">
             {summaryItems.map((item) => (
-              <div key={item.group} className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="text-sm font-semibold text-slate-600">{item.group}</div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-400">Số HĐ</span>
-                  <span className="text-base font-bold text-slate-700">{item.count}</span>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-400">Tổng HĐ</span>
-                  <span className="text-base font-bold text-slate-700">
-                    {formatCurrencyFull(item.totalContract)}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-400">Tổng DT</span>
-                  <span className="text-base font-bold text-emerald-600">
-                    {formatCurrencyFull(item.totalRevenue)}
-                  </span>
-                </div>
+              <div key={item.group} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+                <span className="font-semibold text-slate-600">{item.group}:</span>
+                <span className="font-bold text-slate-800">{formatCurrencyFull(item.totalContract)}</span>
               </div>
             ))}
           </div>
@@ -259,12 +264,12 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
             <table className="w-full table-fixed divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
-                  {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
+                  {visibleColumns.map((key) => (
                     <th
                       key={key}
                       className={`${
                         key === 'priority' || key === 'contractMonth' ? 'px-5' : 'px-4'
-                      } py-3 text-left font-semibold whitespace-nowrap ${
+                      } py-1.5 text-left font-semibold whitespace-nowrap ${
                         key === 'contractValue' || key === 'revenueValue' ? 'text-right' : ''
                       } ${
                         key === 'group'
@@ -298,7 +303,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
                   ))}
                 </tr>
                 <tr className="bg-white">
-                  {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
+                  {visibleColumns.map((key) => (
                     <th
                       key={`filter-${key}`}
                       className={`${key === 'priority' || key === 'contractMonth' ? 'px-5' : 'px-4'} py-2`}
@@ -311,22 +316,26 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
               <tbody className="divide-y divide-slate-100 bg-white">
                 {sortedRows.map((row, index) => (
                   <tr key={`${row.project}-${index}`} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-44">
+                    <td className="px-4 py-1.5 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
+                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-44">
                       {row.customer}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.type}</td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-56">
+                    <td className="px-4 py-1.5 text-slate-600 whitespace-nowrap">{row.type}</td>
+                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-56">
                       {row.project}
                     </td>
-                    <td className="px-5 py-3 text-slate-600 whitespace-nowrap">{row.priority}</td>
-                    <td className="px-5 py-3 text-slate-600 whitespace-nowrap">{row.contractMonth}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
-                      {formatCurrencyFull(row.contractValue)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-emerald-600 whitespace-nowrap">
-                      {formatCurrencyFull(row.revenueValue)}
-                    </td>
+                    <td className="px-5 py-1.5 text-slate-600 whitespace-nowrap">{row.priority}</td>
+                    <td className="px-5 py-1.5 text-slate-600 whitespace-nowrap">{row.contractMonth}</td>
+                    {!hideColumns.includes('contractValue') && (
+                      <td className="px-4 py-1.5 text-right font-semibold text-slate-700 whitespace-nowrap">
+                        {formatCurrencyFull(row.contractValue)}
+                      </td>
+                    )}
+                    {!hideColumns.includes('revenueValue') && (
+                      <td className="px-4 py-1.5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                        {formatCurrencyFull(row.revenueValue)}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -339,3 +348,4 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
 };
 
 export default OpportunitySourceList;
+

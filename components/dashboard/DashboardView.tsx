@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import KPICard from './KPICard';
 import GroupAnalysis from './GroupAnalysis';
 import OpportunityChart from './OpportunityChart';
 import DonutSection from './DonutSection';
 import SignedContractList from './SignedContractList';
 import OpportunitySourceList from './OpportunitySourceList';
+import OpportunityRevenueList from './OpportunityRevenueList';
+import ForecastUntilMonth from './ForecastUntilMonth';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Clock } from 'lucide-react';
 import { formatCurrency, formatCurrencyFull } from '../../lib/utils';
@@ -83,9 +85,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       { name: 'G2B', value: getMetric(donutContractMetrics, 'g2b') }
     ];
 
+    const rSignedDefault = excelData.revenuesFromSignedContracts.reduce((s, r) => s + r.value, 0);
+    const rNewDefault = excelData.opportunitySources.reduce((s, r) => s + r.revenueValue, 0);
     const revenueDonutData: DonutDataItem[] = [
-      { name: 'Từ HĐ đã ký', value: getMetric(donutRevenueMetrics, 'signed') },
-      { name: 'Từ HĐ mới', value: getMetric(donutRevenueMetrics, 'new') }
+      { name: 'Từ HĐ đã ký', value: rSignedDefault },
+      { name: 'Từ HĐ mới', value: rNewDefault }
     ];
 
     const revenueSourceDonutData: DonutDataItem[] = [
@@ -143,6 +147,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       forecastMetrics,
       headerContractPlan,
       headerRevenuePlan,
+      contractGroupPlan: {
+        ITO: getMetric(groupContractMetrics, 'itoPlan'),
+        UNI: getMetric(groupContractMetrics, 'uniPlan'),
+        G2B: getMetric(groupContractMetrics, 'g2bPlan'),
+      },
+      contractGroupActual: {
+        ITO: getMetric(groupContractMetrics, 'itoActual'),
+        UNI: getMetric(groupContractMetrics, 'uniActual'),
+        G2B: getMetric(groupContractMetrics, 'g2bActual'),
+      },
+      revenueGroupPlan: {
+        ITO: getMetric(groupRevenueMetrics, 'itoPlan'),
+        UNI: getMetric(groupRevenueMetrics, 'uniPlan'),
+        G2B: getMetric(groupRevenueMetrics, 'g2bPlan'),
+      },
+      revenueGroupActual: {
+        ITO: getMetric(groupRevenueMetrics, 'itoActual'),
+        UNI: getMetric(groupRevenueMetrics, 'uniActual'),
+        G2B: getMetric(groupRevenueMetrics, 'g2bActual'),
+      },
       contractGroupData,
       revenueGroupData,
       contractDonutData,
@@ -155,7 +179,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       revenueForecastPercent,
       contractDonutTotal: getMetric(donutContractMetrics, 'total'),
       revenueSourceDonutTotal: getMetric(donutRevenueSourceMetrics, 'total'),
-      revenueDonutTotal: getMetric(donutRevenueMetrics, 'total'),
+      revenueDonutTotal: rSignedDefault + rNewDefault,
       kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
       headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
@@ -183,17 +207,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       opportunitySourceTitle: getText(
         'opportunity-source-list',
         'title',
-        'Nguồn dự án tìm năng'
+        'Chi tiết nguồn hợp đồng'
       ),
       opportunitySourceRows: excelData.opportunitySources,
       opportunityTitle: getText('opportunity', 'title', 'Nguồn cơ hội trong năm'),
       donutContractTitle: getText('donut-contract', 'title', 'Nguồn Hợp Đồng'),
-      donutRevenueSourceTitle: getText('donut-revenue-source', 'title', 'Nguồn doanh thu'),
+      donutRevenueSourceTitle: getText('donut-revenue-source', 'title', 'Nguồn doanh thu (Mới)'),
       donutRevenueTitle: getText('donut-revenue', 'title', 'Nguồn Doanh Thu')
     };
   }, [excelData]);
 
   if (!derivedData) return null;
+
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
+  const [forecastMonths, setForecastMonths] = useState<number[]>([1,2,3,4,5,6,7,8,9,10,11,12]);
 
   const contractForecastPercent = derivedData.contractForecastPercent;
   const revenueForecastPercent = derivedData.revenueForecastPercent;
@@ -209,13 +236,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
     5: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
     6: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
     7: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
-    8: 'grid grid-cols-1 lg:grid-cols-3 gap-8'
+    8: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
+    9: 'grid grid-cols-1 gap-8'
   };
 
   const chartRenderers: Record<ExcelChartId, () => React.ReactNode> = {
     'header-plans': () => (
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="w-[90%] max-w-none mx-auto px-4 h-20 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               {derivedData.headerTitle}
@@ -327,12 +355,24 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       <SignedContractList
         rows={derivedData.signedRevenueFromSignedContractRows}
         title={derivedData.signedRevenueFromSignedContractTitle}
+        filterMonths={selectedMonths}
+        compactSummary
       />
     ),
     'opportunity-source-list': () => (
       <OpportunitySourceList
         rows={derivedData.opportunitySourceRows}
         title={derivedData.opportunitySourceTitle}
+        filterMonths={selectedMonths}
+        hideColumns={['revenueValue']}
+        filterByContractMonth
+      />
+    ),
+    'opportunity-revenue-list': () => (
+      <OpportunityRevenueList
+        rows={derivedData.opportunitySourceRows}
+        title="Chi tiết nguồn doanh thu"
+        filterMonths={selectedMonths}
       />
     ),
     opportunity: () => (
@@ -354,6 +394,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         contractsSigned={derivedData.signedContractRows}
         revenuesSigned={derivedData.signedRevenueRows}
         revenuesFromSignedContracts={derivedData.signedRevenueFromSignedContractRows}
+        opportunitySources={derivedData.opportunitySourceRows}
+        selectedMonths={selectedMonths}
+        onSelectedMonthsChange={setSelectedMonths}
       />
     ),
     'donut-revenue-source': () => null,
@@ -371,16 +414,43 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
           })
         )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="w-[90%] max-w-none mx-auto px-4 py-8 space-y-8">
         {renderRows
           .filter((row) => row.type === 'row')
           .map((row) => (
-            <div key={`row-${row.order}`} className={rowLayoutClasses[row.order] ?? 'grid grid-cols-1 gap-6'}>
-              {row.items.map((id) => {
-                const renderer = chartRenderers[id];
-                return renderer ? <React.Fragment key={id}>{renderer()}</React.Fragment> : null;
-              })}
-            </div>
+            <React.Fragment key={`row-${row.order}`}>
+              {row.order === 5 && (
+                <h1 className="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 pt-2">
+                  Kế hoạch Hợp đồng - Doanh thu
+                </h1>
+              )}
+              <div className={rowLayoutClasses[row.order] ?? 'grid grid-cols-1 gap-6'}>
+                {row.items.map((id) => {
+                  const renderer = chartRenderers[id];
+                  return renderer ? <React.Fragment key={id}>{renderer()}</React.Fragment> : null;
+                })}
+              </div>
+              {row.order === 8 && (
+                <>
+                  <h1 className="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 pt-2">
+                    Dự báo kết quả kinh doanh
+                  </h1>
+                  <ForecastUntilMonth
+                    contractPlanYear={derivedData.kpiContractMetrics?.target ?? 0}
+                    contractActual={derivedData.kpiContractMetrics?.current ?? 0}
+                    revenuePlanYear={derivedData.kpiRevenueMetrics?.target ?? 0}
+                    revenueActual={derivedData.kpiRevenueMetrics?.current ?? 0}
+                    opportunitySources={derivedData.opportunitySourceRows}
+                    selectedMonths={forecastMonths}
+                    onSelectedMonthsChange={setForecastMonths}
+                    contractGroupPlan={derivedData.contractGroupPlan}
+                    contractGroupActual={derivedData.contractGroupActual}
+                    revenueGroupPlan={derivedData.revenueGroupPlan}
+                    revenueGroupActual={derivedData.revenueGroupActual}
+                  />
+                </>
+              )}
+            </React.Fragment>
           ))}
       </main>
     </div>

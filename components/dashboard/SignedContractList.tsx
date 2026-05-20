@@ -12,6 +12,8 @@ const formatDate = (dateText: string) => {
 interface SignedContractListProps {
   rows: SignedContractRow[];
   title: string;
+  filterMonths?: number[];
+  compactSummary?: boolean;
 }
 
 type ColumnKey = 'group' | 'customer' | 'contractNo' | 'content' | 'value' | 'contractDate';
@@ -27,7 +29,15 @@ const columnLabels: Record<ColumnKey, string> = {
   contractDate: 'NGÀY HĐ'
 };
 
-const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) => {
+const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, filterMonths, compactSummary = false }) => {
+  const baseRows = useMemo(() => {
+    if (!filterMonths || filterMonths.length === 0) return rows;
+    return rows.filter((row) => {
+      const parts = row.contractDate.split('/');
+      const month = parts.length >= 2 ? Number(parts[1]) : 0;
+      return filterMonths.includes(month);
+    });
+  }, [rows, filterMonths]);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [sortState, setSortState] = useState<{ key: ColumnKey; direction: SortDirection } | null>(null);
@@ -41,14 +51,14 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
 
   const groupOptions = useMemo(() => {
     const groups = Array.from(
-      new Set(rows.map((row) => row.group).filter((group) => group))
+      new Set(baseRows.map((row) => row.group).filter((group) => group))
     ) as string[];
     return groups.sort((a, b) => a.localeCompare(b, 'vi-VN'));
-  }, [rows]);
+  }, [baseRows]);
 
   const filteredRows = useMemo(() => {
-    const baseRows = selectedGroup === 'all' ? rows : rows.filter((row) => row.group === selectedGroup);
-    return baseRows.filter((row) => {
+    const preFiltered = selectedGroup === 'all' ? baseRows : baseRows.filter((row) => row.group === selectedGroup);
+    return preFiltered.filter((row) => {
       return (Object.keys(columnFilters) as FilterKey[]).every((key) => {
         const query = columnFilters[key].trim().toLowerCase();
         if (!query) return true;
@@ -58,7 +68,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
         return String(row[key] ?? '').toLowerCase().includes(query);
       });
     });
-  }, [rows, selectedGroup, columnFilters]);
+  }, [baseRows, selectedGroup, columnFilters]);
 
   const toDateValue = (dateText: string) => {
     const [day, month, year] = dateText.split('/').map((part) => Number(part));
@@ -135,6 +145,16 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
       </CardHeader>
       {!isCollapsed && (
         <CardContent className="pt-6 space-y-6">
+          {compactSummary ? (
+            <div className="flex flex-wrap gap-3">
+              {summaryItems.map((item) => (
+                <div key={item.group} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+                  <span className="font-semibold text-slate-600">{item.group}:</span>
+                  <span className="font-bold text-emerald-600">{formatCurrencyFull(item.total)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {summaryItems.map((item) => (
               <div key={item.group} className="rounded-lg border border-slate-200 bg-white p-4">
@@ -152,6 +172,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
               </div>
             ))}
           </div>
+          )}
 
           <div className="rounded-lg border border-slate-200">
             <table className="w-full table-fixed divide-y divide-slate-200 text-sm">
@@ -160,7 +181,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
                   {(Object.keys(columnLabels) as ColumnKey[]).map((key) => (
                     <th
                       key={key}
-                      className={`px-4 py-3 text-left font-semibold whitespace-nowrap ${
+                      className={`px-4 py-1.5 text-left font-semibold whitespace-nowrap ${
                         key === 'value' || key === 'contractDate' ? 'text-right' : ''
                       } ${
                         key === 'group'
@@ -168,13 +189,13 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
                           : key === 'customer'
                             ? 'w-48'
                             : key === 'contractNo'
-                              ? 'w-48'
+                              ? 'w-32'
                               : key === 'content'
                                 ? 'w-56'
                                 : key === 'value'
-                                  ? 'w-36'
+                                  ? 'w-28'
                                   : key === 'contractDate'
-                                    ? 'w-28'
+                                    ? 'w-24'
                                     : ''
                       }`}
                     >
@@ -220,18 +241,18 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title }) 
               <tbody className="divide-y divide-slate-100 bg-white">
                 {sortedRows.map((row, index) => (
                   <tr key={`${row.contractNo}-${index}`} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-3 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-48">
+                    <td className="px-4 py-1.5 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
+                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-48">
                       {row.customer}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{row.contractNo}</td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-normal break-words max-w-56">
+                    <td className="px-4 py-1.5 text-slate-600 whitespace-nowrap">{row.contractNo}</td>
+                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-56">
                       {row.content}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
+                    <td className="px-4 py-1.5 text-right font-semibold text-slate-700 whitespace-nowrap">
                       {formatCurrencyFull(row.value)}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-600 whitespace-nowrap">
+                    <td className="px-4 py-1.5 text-right font-semibold text-slate-600 whitespace-nowrap">
                       {formatDate(row.contractDate)}
                     </td>
                   </tr>

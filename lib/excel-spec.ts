@@ -113,7 +113,7 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     id: 'opportunity-source-list',
     sheet: KH_CoHoi_SHEET,
     texts: {
-      title: 'Nguồn dự án tìm năng',
+      title: 'Chi tiết nguồn hợp đồng',
       revenueFormula: 'Giá trị DT = H + J + L (theo từng dòng)'
     },
     metrics: {}
@@ -183,9 +183,9 @@ export const EXCEL_LAYOUT_CONFIG: ExcelLayoutConfig = {
     { order: 2, items: ['group-contract', 'group-revenue'] },
     { order: 3, items: ['signed-contract-list'] },
     { order: 4, items: ['signed-revenue-list'] },
-    { order: 5, items: ['opportunity'] },
-    { order: 6, items: ['donut-contract', 'donut-revenue-source', 'donut-revenue'] },
-    { order: 7, items: ['signed-revenue-from-signed-contract-list'] },
-    { order: 8, items: ['opportunity-source-list'] }
+    { order: 5, items: ['donut-contract', 'donut-revenue-source', 'donut-revenue'] },
+    { order: 6, items: ['opportunity-source-list'] },
+    { order: 7, items: ['opportunity-revenue-list'] },
+    { order: 8, items: ['signed-revenue-from-signed-contract-list'] }
   ]
 };

@@ -31,6 +31,7 @@ export type ExcelChartId =
   | 'signed-revenue-list'
   | 'signed-revenue-from-signed-contract-list'
   | 'opportunity-source-list'
+  | 'opportunity-revenue-list'
   | 'opportunity'
   | 'donut-contract'
   | 'donut-revenue-source'
@@ -104,4 +105,10 @@ export interface OpportunitySourceRow {
   contractMonth: string;
   contractValue: number;
   revenueValue: number;
+  dt1: number;
+  dtMonth1: string;
+  dt2: number;
+  dtMonth2: string;
+  dt3: number;
+  dtMonth3: string;
 }

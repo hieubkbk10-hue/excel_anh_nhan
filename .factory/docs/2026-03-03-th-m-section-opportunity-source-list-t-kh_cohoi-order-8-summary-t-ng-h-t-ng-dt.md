@@ -24,7 +24,7 @@
      - Thêm entry `EXCEL_CHART_SPECS`:
        - `id: 'opportunity-source-list'`
        - `sheet: KH_CoHoi_SHEET`
-       - `texts.title: 'Nguồn dự án tìm năng'`
+       - `texts.title: 'Chi tiết nguồn hợp đồng'`
        - `metrics`/text config có mention tường minh công thức: `Giá trị DT = H + J + L (theo từng dòng)`.
      - Thêm layout row `{ order: 8, items: ['opportunity-source-list'] }`.
    - Reflection: ✓ Công thức xuất hiện rõ trong source of truth đúng yêu cầu.
