@@ -184,8 +184,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
       headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
       forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
-      groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm (Tr)'),
-      groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm (Tr)'),
+      groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm'),
+      groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm'),
       signedContractTitle: getText(
         'signed-contract-list',
         'title',
@@ -220,7 +220,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
   if (!derivedData) return null;
 
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [forecastMonths, setForecastMonths] = useState<number[]>([1,2,3,4,5,6,7,8,9,10,11,12]);
+  const [forecastMonths, setForecastMonths] = useState<number[]>([]);
 
   const contractForecastPercent = derivedData.contractForecastPercent;
   const revenueForecastPercent = derivedData.revenueForecastPercent;
@@ -243,7 +243,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
   const chartRenderers: Record<ExcelChartId, () => React.ReactNode> = {
     'header-plans': () => (
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="w-[90%] max-w-none mx-auto px-4 h-20 flex items-center justify-between">
+        <div className="w-[80%] max-w-none mx-auto px-4 h-20 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               {derivedData.headerTitle}
@@ -397,6 +397,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         opportunitySources={derivedData.opportunitySourceRows}
         selectedMonths={selectedMonths}
         onSelectedMonthsChange={setSelectedMonths}
+        monthlyContractPlan={excelData.monthlyContractPlan}
+        monthlyRevenuePlan={excelData.monthlyRevenuePlan}
       />
     ),
     'donut-revenue-source': () => null,
@@ -414,7 +416,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
           })
         )}
 
-      <main className="w-[90%] max-w-none mx-auto px-4 py-8 space-y-8">
+      <main className="w-[80%] max-w-none mx-auto px-4 py-8 space-y-8">
         {renderRows
           .filter((row) => row.type === 'row')
           .map((row) => (

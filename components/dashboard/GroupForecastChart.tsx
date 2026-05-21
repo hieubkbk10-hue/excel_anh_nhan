@@ -41,8 +41,8 @@ const SectionTable: React.FC<SectionTableProps> = ({
 
   return (
     <Card className="border-slate-200 shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 border-b border-slate-200" style={{ backgroundColor: headerBg }}>
-        <CardTitle className="text-sm font-bold uppercase tracking-wide text-slate-700">{title}</CardTitle>
+      <CardHeader className="py-1.5 px-4 border-b border-slate-200" style={{ backgroundColor: headerBg }}>
+        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</CardTitle>
       </CardHeader>
       <CardContent className="pt-5 pb-4">
         <div className="grid grid-cols-3 divide-x divide-slate-100">

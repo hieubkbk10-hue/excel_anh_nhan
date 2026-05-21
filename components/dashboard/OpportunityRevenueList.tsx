@@ -30,6 +30,7 @@ function expandRows(rows: OpportunitySourceRow[], filterMonths?: number[]): Reve
     for (const lane of lanes) {
       if (lane.value <= 0) continue;
       const m = parseMonth(lane.month);
+      if (!m || isNaN(m)) continue;
       if (filterMonths && filterMonths.length > 0 && !filterMonths.includes(m)) continue;
       result.push({
         group: row.group, customer: row.customer, type: row.type,
@@ -117,13 +118,15 @@ const OpportunityRevenueList: React.FC<Props> = ({ rows, title, filterMonths }) 
 
   return (
     <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200">
-      <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50/40">
+      <CardHeader
+        className="pb-4 border-b border-slate-100 bg-slate-50/40 cursor-pointer select-none"
+        onClick={() => setIsCollapsed(p => !p)}
+      >
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base font-semibold uppercase text-slate-700">{title}</CardTitle>
-          <button type="button" onClick={() => setIsCollapsed(p => !p)}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-100">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-100">
             <ChevronDown className={`h-4 w-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-          </button>
+          </div>
         </div>
       </CardHeader>
       {!isCollapsed && (
@@ -202,6 +205,13 @@ const OpportunityRevenueList: React.FC<Props> = ({ rows, title, filterMonths }) 
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex justify-center pt-1">
+            <button type="button" onClick={() => setIsCollapsed(true)}
+              className="flex items-center gap-1 px-3 py-0.5 rounded-full border border-slate-200 text-[11px] text-slate-400 hover:bg-slate-100 transition-colors">
+              <ChevronDown className="h-3 w-3 rotate-180" />
+              Thu gọn
+            </button>
           </div>
         </CardContent>
       )}

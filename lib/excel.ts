@@ -73,7 +73,11 @@ function buildExcelData(workbook: XLSX.WorkBook): ExcelData {
   const revenuesSigned = buildSignedContracts(workbook, DT_Thucte_SHEET);
   const revenuesFromSignedContracts = buildSignedContracts(workbook, KH_DT_HD_da_ky_SHEET);
   const opportunitySources = buildOpportunitySources(workbook, KH_CoHoi_SHEET);
-  return { charts, texts, contractsSigned, revenuesSigned, revenuesFromSignedContracts, opportunitySources };
+  const ws = workbook.Sheets[DEFAULT_SHEET];
+  // L5:L16 = KH tháng HĐ (tháng 1-12), N23:N34 = KH tháng DT (tháng 1-12)
+  const monthlyContractPlan = Array.from({ length: 12 }, (_, i) => toNumber(ws[`L${5 + i}`]?.v));
+  const monthlyRevenuePlan = Array.from({ length: 12 }, (_, i) => toNumber(ws[`N${23 + i}`]?.v));
+  return { charts, texts, contractsSigned, revenuesSigned, revenuesFromSignedContracts, opportunitySources, monthlyContractPlan, monthlyRevenuePlan };
 }
 
 function ensureWorkbookSheets(workbook: XLSX.WorkBook): void {

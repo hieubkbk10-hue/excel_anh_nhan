@@ -14,6 +14,34 @@ function getMonth(contractDate: string): number {
   return parts.length >= 2 ? Number(parts[1]) : 0;
 }
 
+const MonthlyPlanBar = ({
+  label, opp, plan, color
+}: { label: string; opp: number; plan: number; color: string }) => {
+  const pct = plan > 0 ? (opp / plan) * 100 : 0;
+  const isOver = pct > 100;
+  const barPct = Math.min(pct, 100);
+  const badgeColor = pct >= 100 ? '#16a34a' : pct >= 70 ? color : '#f59e0b';
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase text-slate-500">{label}</span>
+        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full text-white" style={{ backgroundColor: badgeColor }}>
+          {pct.toFixed(1)}% {isOver ? '▲' : ''}
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-full rounded-full transition-all" style={{ width: `${barPct}%`, backgroundColor: color }} />
+        </div>
+      </div>
+      <div className="flex justify-between text-xs text-slate-500">
+        <span>Cơ hội: <strong style={{ color }}>{formatInBillions(opp)}</strong></span>
+        <span>KH tháng: <strong className="text-slate-600">{formatInBillions(plan)}</strong></span>
+      </div>
+    </div>
+  );
+};
+
 const DonutChartWithLegend = ({
   title,
   data,
@@ -97,6 +125,8 @@ interface DonutSectionProps {
   opportunitySources: OpportunitySourceRow[];
   selectedMonths: number[];
   onSelectedMonthsChange: (months: number[]) => void;
+  monthlyContractPlan: number[];
+  monthlyRevenuePlan: number[];
 }
 
 const DonutSection: React.FC<DonutSectionProps> = ({
@@ -114,7 +144,9 @@ const DonutSection: React.FC<DonutSectionProps> = ({
   revenuesFromSignedContracts,
   opportunitySources,
   selectedMonths,
-  onSelectedMonthsChange
+  onSelectedMonthsChange,
+  monthlyContractPlan,
+  monthlyRevenuePlan,
 }) => {
 
   const filtered = useMemo(() => {
@@ -195,6 +227,27 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     opportunitySources, revenuesSigned, revenuesFromSignedContracts
   ]);
 
+  // So sánh cơ hội vs kế hoạch tháng (chỉ khi chọn ít nhất 1 tháng cụ thể)
+  const monthlyComparison = useMemo(() => {
+    if (selectedMonths.length === 0) return null;
+    const parseMonth = (s: string) => parseInt(s.replace(/\D/g, ''), 10);
+
+    const oppContract = opportunitySources
+      .filter(r => selectedMonths.includes(parseMonth(r.contractMonth)))
+      .reduce((s, r) => s + r.contractValue, 0);
+
+    const oppRevenue = opportunitySources.reduce((s, r) =>
+      s +
+      (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
+      (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
+      (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0), 0);
+
+    const planContract = selectedMonths.reduce((s, m) => s + (monthlyContractPlan[m - 1] ?? 0), 0);
+    const planRevenue = selectedMonths.reduce((s, m) => s + (monthlyRevenuePlan[m - 1] ?? 0), 0);
+
+    return { oppContract, oppRevenue, planContract, planRevenue };
+  }, [selectedMonths, opportunitySources, monthlyContractPlan, monthlyRevenuePlan]);
+
   return (
     <div className="col-span-1 lg:col-span-3">
       <Card className="border-slate-200 shadow-sm overflow-hidden">
@@ -256,6 +309,22 @@ const DonutSection: React.FC<DonutSectionProps> = ({
               valueClassName="font-bold text-slate-800"
             />
           </div>
+          {monthlyComparison && (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <MonthlyPlanBar
+                label="Cơ hội HĐ vs KH tháng"
+                opp={monthlyComparison.oppContract}
+                plan={monthlyComparison.planContract}
+                color="#3b82f6"
+              />
+              <MonthlyPlanBar
+                label="Cơ hội DT vs KH tháng"
+                opp={monthlyComparison.oppRevenue}
+                plan={monthlyComparison.planRevenue}
+                color="#10b981"
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

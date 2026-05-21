@@ -63,6 +63,10 @@ export interface ExcelData {
   revenuesSigned: SignedContractRow[];
   revenuesFromSignedContracts: SignedContractRow[];
   opportunitySources: OpportunitySourceRow[];
+  /** KH tháng HĐ: index 0 = tháng 1, ..., index 11 = tháng 12 (TH_2026 cột L hàng 5-16) */
+  monthlyContractPlan: number[];
+  /** KH tháng DT: index 0 = tháng 1, ..., index 11 = tháng 12 (TH_2026 cột N hàng 23-34) */
+  monthlyRevenuePlan: number[];
 }
 
 export type ExcelTextConfig =

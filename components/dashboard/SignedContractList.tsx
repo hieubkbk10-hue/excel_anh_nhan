@@ -130,17 +130,15 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
 
   return (
     <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200">
-      <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50/40">
+      <CardHeader
+        className="pb-4 border-b border-slate-100 bg-slate-50/40 cursor-pointer select-none"
+        onClick={() => setIsCollapsed((prev) => !prev)}
+      >
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base font-semibold uppercase text-slate-700">{title}</CardTitle>
-          <button
-            type="button"
-            onClick={() => setIsCollapsed((prev) => !prev)}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-100"
-            aria-label={isCollapsed ? 'Mở rộng bảng hợp đồng đã ký' : 'Thu gọn bảng hợp đồng đã ký'}
-          >
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-100">
             <ChevronDown className={`h-4 w-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-          </button>
+          </div>
         </div>
       </CardHeader>
       {!isCollapsed && (
@@ -259,6 +257,16 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(true)}
+              className="flex items-center gap-1 px-3 py-0.5 rounded-full border border-slate-200 text-[11px] text-slate-400 hover:bg-slate-100 transition-colors"
+            >
+              <ChevronDown className="h-3 w-3 rotate-180" />
+              Thu gọn
+            </button>
           </div>
         </CardContent>
       )}

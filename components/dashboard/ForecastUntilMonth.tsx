@@ -112,19 +112,30 @@ const ForecastUntilMonth: React.FC<Props> = ({
   contractGroupPlan, contractGroupActual,
   revenueGroupPlan, revenueGroupActual,
 }) => {
-  const toggle = (m: number) =>
-    onSelectedMonthsChange(selectedMonths.includes(m) ? selectedMonths.filter(x => x !== m) : [...selectedMonths, m]);
+  const toggle = (m: number) => {
+    // If m is already the max selected month, deselect all (back to "Tất cả")
+    const max = selectedMonths.length > 0 ? Math.max(...selectedMonths) : 0;
+    if (max === m) {
+      onSelectedMonthsChange([]);
+    } else {
+      // Select all months from 1 to m
+      onSelectedMonthsChange(Array.from({ length: m }, (_, i) => i + 1));
+    }
+  };
 
   const computed = useMemo(() => {
+    const isAll = selectedMonths.length === 0;
+    const inMonth = (m: number) => isAll || selectedMonths.includes(m);
+
     const contractPlanned = opportunitySources
-      .filter(r => selectedMonths.includes(parseMonth(r.contractMonth)))
+      .filter(r => inMonth(parseMonth(r.contractMonth)))
       .reduce((s, r) => s + r.contractValue, 0);
 
     const revenuePlanned = opportunitySources.reduce((s, r) =>
       s +
-      (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
-      (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
-      (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0), 0);
+      (inMonth(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
+      (inMonth(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
+      (inMonth(parseMonth(r.dtMonth3)) ? r.dt3 : 0), 0);
 
     return { contractPlanned, revenuePlanned };
   }, [selectedMonths, opportunitySources]);
@@ -136,9 +147,9 @@ const ForecastUntilMonth: React.FC<Props> = ({
           <CardTitle className="text-sm font-bold uppercase tracking-wide text-indigo-700 mr-1">
             Kế hoạch cơ hội:
           </CardTitle>
-          <button onClick={() => onSelectedMonthsChange(ALL_MONTHS)}
+          <button onClick={() => onSelectedMonthsChange([])}
             className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
-              selectedMonths.length === 12
+              selectedMonths.length === 0
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400 hover:text-indigo-600'
             }`}>
