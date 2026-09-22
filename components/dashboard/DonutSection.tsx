@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn, formatCurrencyFull, formatInBillions } from '../../lib/utils';
@@ -12,6 +12,12 @@ const REVENUE_COLORS = ['#1e293b', '#10b981']; // Slate-800, Emerald-500
 function getMonth(contractDate: string): number {
   const parts = contractDate.split('/');
   return parts.length >= 2 ? Number(parts[1]) : 0;
+}
+
+/** Trích số mức độ từ priority dạng "Mức 1: ..." */
+function parseLevel(priority: string): number | null {
+  const match = priority.match(/Mức\s*(\d)/);
+  return match ? Number(match[1]) : null;
 }
 
 const MonthlyPlanBar = ({
@@ -130,17 +136,9 @@ interface DonutSectionProps {
 }
 
 const DonutSection: React.FC<DonutSectionProps> = ({
-  contractData,
-  revenueData,
-  revenueSourceData,
-  contractTotal,
-  revenueTotal,
-  revenueSourceTotal,
   contractTitle,
   revenueTitle,
   revenueSourceTitle,
-  contractsSigned,
-  revenuesSigned,
   revenuesFromSignedContracts,
   opportunitySources,
   selectedMonths,
@@ -149,21 +147,33 @@ const DonutSection: React.FC<DonutSectionProps> = ({
   monthlyRevenuePlan,
 }) => {
 
+  // Bộ lọc MỨC ĐỘ (danh sách rỗng = hiển thị tất cả)
+  const [selectedLevels, setSelectedLevels] = useState<number[]>([1, 2, 3]);
+
+  const levels = useMemo(
+    () =>
+      Array.from(new Set(opportunitySources.map((r) => parseLevel(r.priority)).filter((n): n is number => n !== null))).sort((a, b) => a - b),
+    [opportunitySources]
+  );
+
+  const matchesLevel = (priority: string) => {
+    const level = parseLevel(priority);
+    return level !== null && selectedLevels.includes(level);
+  };
+
   const filtered = useMemo(() => {
-    if (selectedMonths.length === 0) {
-      return { contractData, revenueSourceData, revenueData, contractTotal, revenueSourceTotal, revenueTotal };
-    }
+    const parseMonth = (s: string) => parseInt(s.replace(/\D/g, ''), 10);
+    const monthOk = (value: string) =>
+      selectedMonths.length === 0 || selectedMonths.includes(parseMonth(value));
 
     const filterRows = (rows: SignedContractRow[]) =>
-      rows.filter((r) => selectedMonths.includes(getMonth(r.contractDate)));
+      selectedMonths.length === 0
+        ? rows
+        : rows.filter((r) => selectedMonths.includes(getMonth(r.contractDate)));
 
-    const parseMonth = (s: string) => parseInt(s.replace(/\D/g, ''), 10);
-
-    const filteredOpportunities = opportunitySources.filter((r) => {
-      const m = parseMonth(r.contractMonth);
-      return selectedMonths.includes(m);
-    });
-    const filteredRevenues = filterRows(revenuesSigned);
+    const filteredOpportunities = opportunitySources.filter(
+      (r) => monthOk(r.contractMonth) && matchesLevel(r.priority)
+    );
     const filteredRevenuesFromSigned = filterRows(revenuesFromSignedContracts);
 
     const sumOppByGroup = (group: string) =>
@@ -179,12 +189,12 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     // revenueSource: tính từ opportunitySources theo tháng DT thực tế (dt1/dt2/dt3)
     const sumDtByGroup = (group: string) =>
       opportunitySources
-        .filter((r) => r.group.toUpperCase() === group)
+        .filter((r) => r.group.toUpperCase() === group && matchesLevel(r.priority))
         .reduce((s, r) => {
           return s +
-            (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
-            (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
-            (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0);
+            (monthOk(r.dtMonth1) ? r.dt1 : 0) +
+            (monthOk(r.dtMonth2) ? r.dt2 : 0) +
+            (monthOk(r.dtMonth3) ? r.dt3 : 0);
         }, 0);
 
     const rsITO = sumDtByGroup('ITO');
@@ -194,10 +204,11 @@ const DonutSection: React.FC<DonutSectionProps> = ({
 
     const rSigned = filteredRevenuesFromSigned.reduce((s, r) => s + r.value, 0);
     const rNew = opportunitySources.reduce((s, r) => {
+      if (!matchesLevel(r.priority)) return s;
       return s +
-        (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
-        (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
-        (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0);
+        (monthOk(r.dtMonth1) ? r.dt1 : 0) +
+        (monthOk(r.dtMonth2) ? r.dt2 : 0) +
+        (monthOk(r.dtMonth3) ? r.dt3 : 0);
     }, 0);
     const rTotal = rSigned + rNew;
 
@@ -222,9 +233,8 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     };
   }, [
     selectedMonths,
-    contractData, revenueSourceData, revenueData,
-    contractTotal, revenueSourceTotal, revenueTotal,
-    opportunitySources, revenuesSigned, revenuesFromSignedContracts
+    selectedLevels,
+    opportunitySources, revenuesFromSignedContracts
   ]);
 
   // So sánh cơ hội vs kế hoạch tháng (chỉ khi chọn ít nhất 1 tháng cụ thể)
@@ -233,20 +243,21 @@ const DonutSection: React.FC<DonutSectionProps> = ({
     const parseMonth = (s: string) => parseInt(s.replace(/\D/g, ''), 10);
 
     const oppContract = opportunitySources
-      .filter(r => selectedMonths.includes(parseMonth(r.contractMonth)))
+      .filter(r => selectedMonths.includes(parseMonth(r.contractMonth)) && matchesLevel(r.priority))
       .reduce((s, r) => s + r.contractValue, 0);
 
     const oppRevenue = opportunitySources.reduce((s, r) =>
+      matchesLevel(r.priority) ?
       s +
       (selectedMonths.includes(parseMonth(r.dtMonth1)) ? r.dt1 : 0) +
       (selectedMonths.includes(parseMonth(r.dtMonth2)) ? r.dt2 : 0) +
-      (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0), 0);
+      (selectedMonths.includes(parseMonth(r.dtMonth3)) ? r.dt3 : 0) : s, 0);
 
     const planContract = selectedMonths.reduce((s, m) => s + (monthlyContractPlan[m - 1] ?? 0), 0);
     const planRevenue = selectedMonths.reduce((s, m) => s + (monthlyRevenuePlan[m - 1] ?? 0), 0);
 
     return { oppContract, oppRevenue, planContract, planRevenue };
-  }, [selectedMonths, opportunitySources, monthlyContractPlan, monthlyRevenuePlan]);
+  }, [selectedMonths, selectedLevels, opportunitySources, monthlyContractPlan, monthlyRevenuePlan]);
 
   return (
     <div className="col-span-1 lg:col-span-3">
@@ -280,6 +291,27 @@ const DonutSection: React.FC<DonutSectionProps> = ({
                 T{m}
               </button>
             ))}
+            <div className="flex items-center gap-1 ml-2 border-l border-blue-200 pl-3">
+              <span className="text-xs font-bold uppercase text-blue-700 mr-1">Mức độ:</span>
+              {levels.map((level) => (
+                <label
+                  key={level}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border cursor-pointer transition-colors bg-white text-slate-600 border-slate-300 hover:border-blue-400 hover:text-blue-600"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedLevels.includes(level)}
+                    onChange={() =>
+                      setSelectedLevels((prev) =>
+                        prev.includes(level) ? prev.filter((x) => x !== level) : [...prev, level]
+                      )
+                    }
+                    className="h-3.5 w-3.5 accent-blue-600"
+                  />
+                  Mức {level}
+                </label>
+              ))}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-6">

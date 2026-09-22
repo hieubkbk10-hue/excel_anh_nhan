@@ -98,6 +98,7 @@ export interface SignedContractRow {
   content: string;
   value: number;
   contractDate: string;
+  status: string;
 }
 
 export interface OpportunitySourceRow {

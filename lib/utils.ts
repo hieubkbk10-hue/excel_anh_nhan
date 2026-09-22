@@ -30,3 +30,14 @@ export function formatInBillions(amount: number): string {
     maximumFractionDigits: 2,
   }).format(value) + ' tỷ';
 }
+
+const GROUP_ORDER = ['ITO', 'UNI', 'G2B'];
+
+export function sortGroups(a: string, b: string): number {
+  const ia = GROUP_ORDER.indexOf(a);
+  const ib = GROUP_ORDER.indexOf(b);
+  if (ia !== -1 && ib !== -1) return ia - ib;
+  if (ia !== -1) return -1;
+  if (ib !== -1) return 1;
+  return a.localeCompare(b, 'vi-VN');
+}

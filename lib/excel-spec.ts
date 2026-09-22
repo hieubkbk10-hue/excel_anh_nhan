@@ -1,6 +1,6 @@
 import { ExcelChartSpec, ExcelLayoutConfig } from '../types';
 
-export const EXCEL_FILE_URL = '/input.xlsx';
+export const EXCEL_FILE_URL = '/Hop_dong_doanh_thu_BPPM_nam_2026.xlsx';
 export const DEFAULT_SHEET = 'TH_2026';
 export const HD_Thucte_SHEET = 'HD_Thucte';
 export const DT_Thucte_SHEET = 'DT_Thucte';
@@ -45,12 +45,14 @@ export const EXCEL_CHART_SPECS: ExcelChartSpec[] = [
     id: 'forecast',
     sheet: DEFAULT_SHEET,
     texts: {
-      title: 'Dự báo cuối năm'
+      title: 'Dự báo cuối năm (Mức 1,2,3)'
     },
     metrics: {
       contractPlan: 'L17',
+      contractActual: 'N17',
       contractForecast: 'M17',
       revenuePlan: 'N35',
+      revenueActual: 'Q35',
       revenueSigned: 'O35',
       revenueNew: 'P35'
     }

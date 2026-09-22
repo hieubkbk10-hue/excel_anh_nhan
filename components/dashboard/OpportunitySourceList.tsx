@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { OpportunitySourceRow } from '../../types';
-import { formatCurrencyFull } from '../../lib/utils';
+import { formatCurrencyFull, sortGroups } from '../../lib/utils';
 import { ChevronDown } from 'lucide-react';
 
 interface OpportunitySourceListProps {
@@ -20,9 +20,11 @@ type ColumnKey =
   | 'priority'
   | 'contractMonth'
   | 'contractValue'
+  | 'note'
+  | 'highlight'
   | 'revenueValue';
 type SortDirection = 'asc' | 'desc';
-type FilterKey = Exclude<ColumnKey, 'group' | 'type' | 'priority' | 'contractMonth'>;
+type FilterKey = Exclude<ColumnKey, 'group' | 'type' | 'priority' | 'contractMonth' | 'note' | 'highlight'>;
 
 const columnLabels: Record<ColumnKey, string> = {
   group: 'NHÓM',
@@ -32,6 +34,8 @@ const columnLabels: Record<ColumnKey, string> = {
   priority: 'MỨC ĐỘ',
   contractMonth: 'THÁNG HĐ',
   contractValue: 'GIÁ TRỊ HĐ',
+  note: 'GHI CHÚ',
+  highlight: '#',
   revenueValue: 'GIÁ TRỊ DT'
 };
 
@@ -54,10 +58,39 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
       .filter((row) => row.revenueValue > 0);
   }, [rows, filterMonths, filterByContractMonth]);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [notes, setNotes] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('khohoi_notes_v1') || '{}') as Record<string, string>;
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('khohoi_notes_v1', JSON.stringify(notes));
+    } catch {
+      // ignore
+    }
+  }, [notes]);
+  const [highlights, setHighlights] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('khohoi_highlight_v1') || '{}') as Record<string, boolean>;
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('khohoi_highlight_v1', JSON.stringify(highlights));
+    } catch {
+      // ignore
+    }
+  }, [highlights]);
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedContractMonth, setSelectedContractMonth] = useState('all');
+  const [selectedHighlight, setSelectedHighlight] = useState<'all' | 'highlighted'>('all');
   const [sortState, setSortState] = useState<{ key: ColumnKey; direction: SortDirection } | null>(null);
   const [columnFilters, setColumnFilters] = useState<Record<FilterKey, string>>({
     customer: '',
@@ -68,7 +101,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
 
   const groupOptions = useMemo(() => {
     const groups = Array.from(new Set(baseRows.map((row) => row.group).filter(Boolean))) as string[];
-    return groups.sort((a, b) => a.localeCompare(b, 'vi-VN'));
+    return groups.sort((a, b) => sortGroups(a, b));
   }, [baseRows]);
 
   const typeOptions = useMemo(() => {
@@ -92,6 +125,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
       if (selectedType !== 'all' && row.type !== selectedType) return false;
       if (selectedPriority !== 'all' && row.priority !== selectedPriority) return false;
       if (selectedContractMonth !== 'all' && row.contractMonth !== selectedContractMonth) return false;
+      if (selectedHighlight === 'highlighted' && !highlights[row.project]) return false;
       return true;
     });
 
@@ -105,7 +139,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
         return String(row[key] ?? '').toLowerCase().includes(query);
       });
     });
-  }, [baseRows, selectedGroup, selectedType, selectedPriority, selectedContractMonth, columnFilters]);
+  }, [baseRows, selectedGroup, selectedType, selectedPriority, selectedContractMonth, selectedHighlight, highlights, columnFilters]);
 
   const sortedRows = useMemo(() => {
     if (!sortState) return filteredRows;
@@ -134,7 +168,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
       count: data.count,
       totalContract: data.totalContract,
       totalRevenue: data.totalRevenue
-    }));
+    })).sort((a, b) => sortGroups(a.group, b.group));
   }, [sortedRows]);
 
   const handleFilterChange = (key: FilterKey, value: string) => {
@@ -142,6 +176,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
   };
 
   const toggleSort = (key: ColumnKey) => {
+    if (key === 'note' || key === 'highlight') return;
     setSortState((prev) => {
       if (!prev || prev.key !== key) {
         return { key, direction: 'asc' };
@@ -224,6 +259,20 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
       );
     }
 
+    if (key === 'highlight') {
+      return (
+        <select
+          value={selectedHighlight}
+          onChange={(event) => setSelectedHighlight(event.target.value as 'all' | 'highlighted')}
+          className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200"
+        >
+          <option value="all">Tất cả</option>
+          <option value="highlighted">Nổi bật</option>
+        </select>
+      );
+    }
+    if (key === 'note') return null;
+
     return (
       <input
         value={columnFilters[key as FilterKey]}
@@ -237,7 +286,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
   return (
     <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200">
       <CardHeader
-        className="pb-4 border-b border-slate-100 bg-slate-50/40 cursor-pointer select-none"
+        className="pb-4 border-b border-slate-100 bg-slate-50/40 cursor-pointer"
         onClick={() => setIsCollapsed((prev) => !prev)}
       >
         <div className="flex items-center justify-between gap-3">
@@ -248,12 +297,17 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
         </div>
       </CardHeader>
       {!isCollapsed && (
-        <CardContent className="pt-6 space-y-6">
-          <div className="flex flex-wrap gap-3">
+        <CardContent className="pt-6 space-y-3">
+          <div className="grid grid-cols-3 gap-2">
             {summaryItems.map((item) => (
-              <div key={item.group} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-                <span className="font-semibold text-slate-600">{item.group}:</span>
-                <span className="font-bold text-slate-800">{formatCurrencyFull(item.totalContract)}</span>
+              <div key={item.group} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+                <span className="text-xs font-semibold text-slate-600 whitespace-nowrap">{item.group}</span>
+                <span className="text-xs text-slate-400 whitespace-nowrap">
+                  Số cơ hội <strong className="font-bold text-slate-700">{item.count}</strong>
+                </span>
+                <span className="text-xs text-slate-400 whitespace-nowrap">
+                  Tổng <strong className="font-bold text-blue-600">{formatCurrencyFull(item.totalContract)}</strong>
+                </span>
               </div>
             ))}
           </div>
@@ -265,23 +319,25 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
                   {visibleColumns.map((key) => (
                     <th
                       key={key}
-                      className={`${
-                        key === 'priority' || key === 'contractMonth' ? 'px-5' : 'px-4'
-                      } py-1.5 text-left font-semibold whitespace-nowrap ${
+                      className={`px-4 py-1.5 text-left font-semibold whitespace-nowrap ${
                         key === 'contractValue' || key === 'revenueValue' ? 'text-right' : ''
                       } ${
                         key === 'group'
-                          ? 'w-20'
-                          : key === 'type'
-                            ? 'w-24'
+                          ? 'w-16'
+: key === 'type'
+                              ? 'w-14'
                             : key === 'priority'
-                              ? 'w-32'
+                              ? 'w-20'
                               : key === 'contractMonth'
-                                ? 'w-28'
+                                ? 'w-16'
                                 : key === 'contractValue'
                                   ? 'w-28'
-                                  : key === 'revenueValue'
-                                    ? 'w-32'
+                                  : key === 'note'
+                                    ? 'w-20'
+                                    : key === 'highlight'
+                                      ? 'w-16'
+                                      : key === 'revenueValue'
+                                        ? 'w-28'
                                 : key === 'customer'
                                   ? 'w-44'
                                   : key === 'project'
@@ -302,10 +358,7 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
                 </tr>
                 <tr className="bg-white">
                   {visibleColumns.map((key) => (
-                    <th
-                      key={`filter-${key}`}
-                      className={`${key === 'priority' || key === 'contractMonth' ? 'px-5' : 'px-4'} py-2`}
-                    >
+                    <th key={`filter-${key}`} className="px-4 py-2">
                       {renderFilterCell(key)}
                     </th>
                   ))}
@@ -313,24 +366,44 @@ const OpportunitySourceList: React.FC<OpportunitySourceListProps> = ({ rows, tit
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {sortedRows.map((row, index) => (
-                  <tr key={`${row.project}-${index}`} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-1.5 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
-                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-44">
+                  <tr key={`${row.project}-${index}`} className={highlights[row.project] ? '[&_td]:!text-red-600 hover:bg-slate-100' : 'hover:bg-slate-50/60'}>
+                    <td className="px-4 py-0.5 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-normal break-words max-w-48">
                       {row.customer}
                     </td>
-                    <td className="px-4 py-1.5 text-slate-600 whitespace-nowrap">{row.type}</td>
-                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-56">
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-nowrap">{row.type}</td>
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-normal break-words max-w-56">
                       {row.project}
                     </td>
-                    <td className="px-5 py-1.5 text-slate-600 whitespace-nowrap">{row.priority}</td>
-                    <td className="px-5 py-1.5 text-slate-600 whitespace-nowrap">{row.contractMonth}</td>
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-nowrap">{row.priority}</td>
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-nowrap">{row.contractMonth}</td>
                     {!hideColumns.includes('contractValue') && (
-                      <td className="px-4 py-1.5 text-right font-semibold text-slate-700 whitespace-nowrap">
+                      <td className="px-4 py-0.5 text-right font-semibold text-blue-600 whitespace-nowrap">
                         {formatCurrencyFull(row.contractValue)}
                       </td>
                     )}
+                    {!hideColumns.includes('note') && (
+                      <td className="px-2 py-0.5">
+                        <textarea
+                          value={notes[row.project] ?? ''}
+                          onChange={(e) => setNotes((prev) => ({ ...prev, [row.project]: e.target.value }))}
+                          rows={1}
+                          className="w-full resize-y rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        />
+                      </td>
+                    )}
+                    {!hideColumns.includes('highlight') && (
+                      <td className="px-2 py-0.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={!!highlights[row.project]}
+                          onChange={(e) => setHighlights((prev) => ({ ...prev, [row.project]: e.target.checked }))}
+                          className="h-4 w-4 cursor-pointer accent-red-600"
+                        />
+                      </td>
+                    )}
                     {!hideColumns.includes('revenueValue') && (
-                      <td className="px-4 py-1.5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                      <td className="px-4 py-0.5 text-right font-semibold text-emerald-600 whitespace-nowrap">
                         {formatCurrencyFull(row.revenueValue)}
                       </td>
                     )}

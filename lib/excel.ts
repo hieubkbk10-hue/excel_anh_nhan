@@ -115,14 +115,14 @@ function buildSignedContracts(workbook: XLSX.WorkBook, sheetName: string): Signe
   const sheetRange = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1');
   const rows = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
     header: 1,
-    range: { s: { r: 1, c: 0 }, e: { r: sheetRange.e.r, c: 5 } },
+    range: { s: { r: 1, c: 0 }, e: { r: sheetRange.e.r, c: 6 } },
     defval: '',
     raw: false
   });
 
   return rows
     .map((row) => {
-      const [group, customer, contractNo, content, value, contractDate] = row ?? [];
+      const [group, customer, contractNo, content, value, contractDate, status] = row ?? [];
       const normalizedGroup = String(group ?? '').trim();
       const normalizedCustomer = String(customer ?? '').trim();
       const normalizedContractNo = String(contractNo ?? '').trim();
@@ -133,10 +133,11 @@ function buildSignedContracts(workbook: XLSX.WorkBook, sheetName: string): Signe
         contractNo: normalizedContractNo,
         content: normalizedContent,
         value: toNumber(value),
-        contractDate: formatExcelDateToDDMMYYYY(contractDate)
+        contractDate: formatExcelDateToDDMMYYYY(contractDate),
+        status: String(status ?? '').trim()
       };
     })
-    .filter((row) => row.group || row.customer || row.contractNo || row.content || row.value || row.contractDate);
+    .filter((row) => row.group || row.customer || row.contractNo || row.content || row.value || row.contractDate || row.status);
 }
 
 function buildOpportunitySources(workbook: XLSX.WorkBook, sheetName: string): OpportunitySourceRow[] {
@@ -396,15 +397,31 @@ function formatExcelDateToDDMMYYYY(value: unknown): string {
 
   const raw = String(value ?? '').trim();
   if (!raw) return '';
-  const normalized = raw.replace(/-/g, '/');
+  const normalized = raw.replace(/[\-\/\.\s]+/g, '/');
   const parts = normalized.split('/').map((part) => part.trim()).filter(Boolean);
   if (parts.length === 3) {
-    // Excel format is MM/DD/YYYY, convert to DD/MM/YYYY
-    const month = Number(parts[0]);
-    const day = Number(parts[1]);
-    let year = Number(parts[2]);
+    let day: number;
+    let month: number;
+    let year: number;
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      day = Number(parts[2]);
+      month = Number(parts[1]);
+      year = Number(parts[0]);
+    } else {
+      // DD/MM/YYYY (day-first)
+      day = Number(parts[0]);
+      month = Number(parts[1]);
+      year = Number(parts[2]);
+    }
     if (year < 100) year += 2000;
-    if (Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)) {
+    if (
+      Number.isFinite(day) &&
+      Number.isFinite(month) &&
+      Number.isFinite(year) &&
+      day >= 1 && day <= 31 &&
+      month >= 1 && month <= 12
+    ) {
       return formatDateParts(day, month, year);
     }
   }

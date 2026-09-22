@@ -131,11 +131,22 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       ...buildOpportunityRows('G2B', 'g2b')
     ];
 
+    const revenueInProgressByGroup = {
+      ITO: getMetric(opportunityMetrics, 'itoRevenueSigned'),
+      UNI: getMetric(opportunityMetrics, 'uniRevenueSigned'),
+      G2B: getMetric(opportunityMetrics, 'g2bRevenueSigned')
+    };
+    const revenueInProgress =
+      revenueInProgressByGroup.ITO + revenueInProgressByGroup.UNI + revenueInProgressByGroup.G2B;
+
     const forecastContractPlan = getMetric(forecastMetrics, 'contractPlan');
     const forecastRevenuePlan = getMetric(forecastMetrics, 'revenuePlan');
-    const contractForecast = getMetric(forecastMetrics, 'contractForecast');
+    const contractForecast =
+      getMetric(forecastMetrics, 'contractActual') + getMetric(forecastMetrics, 'contractForecast');
     const revenueForecast =
-      getMetric(forecastMetrics, 'revenueSigned') + getMetric(forecastMetrics, 'revenueNew');
+      getMetric(forecastMetrics, 'revenueActual') +
+      getMetric(forecastMetrics, 'revenueSigned') +
+      getMetric(forecastMetrics, 'revenueNew');
     const contractForecastPercent =
       forecastContractPlan ? (contractForecast / forecastContractPlan) * 100 : 0;
     const revenueForecastPercent = forecastRevenuePlan ? (revenueForecast / forecastRevenuePlan) * 100 : 0;
@@ -173,6 +184,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       revenueDonutData,
       revenueSourceDonutData,
       opportunityData,
+      revenueInProgress,
+      revenueInProgressByGroup,
       contractForecast,
       revenueForecast,
       contractForecastPercent,
@@ -183,7 +196,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       kpiContractTitle: getText('kpi-contract', 'title', 'Giá trị hợp đồng'),
       kpiRevenueTitle: getText('kpi-revenue', 'title', 'Giá trị doanh thu'),
       headerTitle: getText('header-plans', 'title', 'BÁO CÁO HOẠT ĐỘNG KDPM'),
-      forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm'),
+      forecastTitle: getText('forecast', 'title', 'Dự báo cuối năm (Mức 1,2,3)'),
       groupContractTitle: getText('group-contract', 'title', 'Hợp đồng theo nhóm'),
       groupRevenueTitle: getText('group-revenue', 'title', 'Doanh thu theo nhóm'),
       signedContractTitle: getText(
@@ -291,7 +304,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         <Card className="h-full border-none shadow-sm ring-1 ring-slate-200/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+              <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                 <Clock size={24} strokeWidth={2.5} />
               </div>
               <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
@@ -301,38 +314,38 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
           </CardHeader>
           <CardContent className="pt-4 space-y-7">
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-base font-medium text-slate-600">Hợp đồng dự kiến</span>
-                <span className="text-medium font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+              <div className="text-base font-medium text-slate-600">Hợp đồng dự kiến</div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-slate-900">
+                    {(derivedData.contractForecast / 1_000_000_000).toFixed(2)}
+                  </span>
+                  <span className="text-lg text-slate-500 font-medium">tỷ</span>
+                </div>
+                <span className="text-3xl font-bold text-blue-600 bg-blue-50 px-3 py-0.5 rounded-full">
                   {contractForecastPercent.toFixed(1)}%
                 </span>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-slate-900">
-                  {(derivedData.contractForecast / 1_000_000_000).toFixed(2)}
-                </span>
-                <span className="text-lg text-slate-500 font-medium">tỷ</span>
-              </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500" style={{ width: `${contractForecastPercentClamped}%` }}></div>
+                <div className="h-full bg-blue-500" style={{ width: `${contractForecastPercentClamped}%` }}></div>
               </div>
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-base font-medium text-slate-600">Doanh thu dự kiến</span>
-                <span className="text-medium font-bold text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full">
+              <div className="text-base font-medium text-slate-600">Doanh thu dự kiến</div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-slate-900">
+                    {(derivedData.revenueForecast / 1_000_000_000).toFixed(2)}
+                  </span>
+                  <span className="text-lg text-slate-500 font-medium">tỷ</span>
+                </div>
+                <span className="text-3xl font-bold text-emerald-600 bg-emerald-50 px-3 py-0.5 rounded-full">
                   {revenueForecastPercent.toFixed(1)}%
                 </span>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-slate-900">
-                  {(derivedData.revenueForecast / 1_000_000_000).toFixed(2)}
-                </span>
-                <span className="text-lg text-slate-500 font-medium">tỷ</span>
-              </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-500" style={{ width: `${revenueForecastPercentClamped}%` }}></div>
+                <div className="h-full bg-emerald-500" style={{ width: `${revenueForecastPercentClamped}%` }}></div>
               </div>
             </div>
           </CardContent>
@@ -346,7 +359,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       <GroupAnalysis title={derivedData.groupRevenueTitle} data={derivedData.revenueGroupData} type="revenue" />
     ),
     'signed-contract-list': () => (
-      <SignedContractList rows={derivedData.signedContractRows} title={derivedData.signedContractTitle} />
+      <SignedContractList rows={derivedData.signedContractRows} title={derivedData.signedContractTitle} isContract />
     ),
     'signed-revenue-list': () => (
       <SignedContractList rows={derivedData.signedRevenueRows} title={derivedData.signedRevenueTitle} />
@@ -357,6 +370,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         title={derivedData.signedRevenueFromSignedContractTitle}
         filterMonths={selectedMonths}
         compactSummary
+        expiryMode
       />
     ),
     'opportunity-source-list': () => (
@@ -422,7 +436,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
           .map((row) => (
             <React.Fragment key={`row-${row.order}`}>
               {row.order === 5 && (
-                <h1 className="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 pt-2">
+                <h1 className="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 pt-2 uppercase">
                   Kế hoạch Hợp đồng - Doanh thu
                 </h1>
               )}
@@ -434,7 +448,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
               </div>
               {row.order === 8 && (
                 <>
-                  <h1 className="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 pt-2">
+                  <h1 className="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 pt-2 uppercase">
                     Dự báo kết quả kinh doanh
                   </h1>
                   <ForecastUntilMonth
@@ -449,6 +463,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
                     contractGroupActual={derivedData.contractGroupActual}
                     revenueGroupPlan={derivedData.revenueGroupPlan}
                     revenueGroupActual={derivedData.revenueGroupActual}
+                    revenueInProgress={derivedData.revenueInProgress}
+                    revenueInProgressByGroup={derivedData.revenueInProgressByGroup}
                   />
                 </>
               )}

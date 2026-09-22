@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { SignedContractRow } from '../../types';
-import { formatCurrencyFull } from '../../lib/utils';
+import { formatCurrencyFull, sortGroups } from '../../lib/utils';
 import { ChevronDown } from 'lucide-react';
 
 const formatDate = (dateText: string) => {
@@ -9,16 +9,45 @@ const formatDate = (dateText: string) => {
   return `${day}/${month}/${year}`;
 };
 
+const DAY_MS = 86400000;
+
+const startOfToday = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+};
+
+const getExpiryClass = (dateText: string): string => {
+  const [day, month, year] = dateText.split('/').map((part) => Number(part));
+  if (!day || !month || !year) return 'text-slate-600';
+  const expiry = new Date(year, month - 1, day).getTime();
+  const today = startOfToday();
+  const in30Days = today + 30 * DAY_MS;
+  if (expiry <= today) return 'bg-red-100 text-red-700';
+  if (expiry <= in30Days) return 'bg-amber-100 text-amber-700';
+  return 'bg-emerald-100 text-emerald-700';
+};
+
 interface SignedContractListProps {
   rows: SignedContractRow[];
   title: string;
   filterMonths?: number[];
   compactSummary?: boolean;
+  isContract?: boolean;
+  expiryMode?: boolean;
 }
 
-type ColumnKey = 'group' | 'customer' | 'contractNo' | 'content' | 'value' | 'contractDate';
+type ColumnKey = 'group' | 'customer' | 'contractNo' | 'content' | 'value' | 'contractDate' | 'status';
 type SortDirection = 'asc' | 'desc';
 type FilterKey = Exclude<ColumnKey, 'group'>;
+
+const STATUS_COLORS: Record<string, string> = {
+  paid: 'bg-emerald-100 text-emerald-700',
+  approved: 'bg-blue-100 text-blue-700',
+  created: 'bg-amber-100 text-amber-700'
+};
+
+const statusClass = (status: string): string =>
+  STATUS_COLORS[status.trim().toLowerCase()] ?? 'bg-slate-100 text-slate-600';
 
 const columnLabels: Record<ColumnKey, string> = {
   group: 'NHÓM',
@@ -26,10 +55,11 @@ const columnLabels: Record<ColumnKey, string> = {
   contractNo: 'SỐ HĐ',
   content: 'NỘI DUNG',
   value: 'GIÁ TRỊ',
-  contractDate: 'NGÀY HĐ'
+  contractDate: 'NGÀY HĐ',
+  status: 'TRẠNG THÁI'
 };
 
-const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, filterMonths, compactSummary = false }) => {
+const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, filterMonths, compactSummary = false, isContract = false, expiryMode = false }) => {
   const baseRows = useMemo(() => {
     if (!filterMonths || filterMonths.length === 0) return rows;
     return rows.filter((row) => {
@@ -46,14 +76,22 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
     contractNo: '',
     content: '',
     value: '',
-    contractDate: ''
+    contractDate: '',
+    status: ''
   });
 
   const groupOptions = useMemo(() => {
     const groups = Array.from(
       new Set(baseRows.map((row) => row.group).filter((group) => group))
     ) as string[];
-    return groups.sort((a, b) => a.localeCompare(b, 'vi-VN'));
+    return groups.sort((a, b) => sortGroups(a, b));
+  }, [baseRows]);
+
+  const statusOptions = useMemo(() => {
+    const statuses = Array.from(
+      new Set(baseRows.map((row) => row.status).filter((status) => status))
+    ) as string[];
+    return statuses.sort((a, b) => a.localeCompare(b, 'vi-VN'));
   }, [baseRows]);
 
   const filteredRows = useMemo(() => {
@@ -104,7 +142,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
       group,
       count: data.count,
       total: data.total
-    }));
+    })).sort((a, b) => sortGroups(a.group, b.group));
   }, [sortedRows]);
 
   const handleFilterChange = (key: FilterKey, value: string) => {
@@ -131,7 +169,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
   return (
     <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200">
       <CardHeader
-        className="pb-4 border-b border-slate-100 bg-slate-50/40 cursor-pointer select-none"
+        className="pb-4 border-b border-slate-100 bg-slate-50/40 cursor-pointer"
         onClick={() => setIsCollapsed((prev) => !prev)}
       >
         <div className="flex items-center justify-between gap-3">
@@ -142,7 +180,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
         </div>
       </CardHeader>
       {!isCollapsed && (
-        <CardContent className="pt-6 space-y-6">
+        <CardContent className="pt-6 space-y-3">
           {compactSummary ? (
             <div className="flex flex-wrap gap-3">
               {summaryItems.map((item) => (
@@ -153,20 +191,16 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
               ))}
             </div>
           ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2">
             {summaryItems.map((item) => (
-              <div key={item.group} className="rounded-lg border border-slate-200 bg-white p-4">
-                <div className="text-sm font-semibold text-slate-600">{item.group}</div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-400">Số HĐ</span>
-                  <span className="text-base font-bold text-slate-700">{item.count}</span>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-400">Tổng giá trị</span>
-                  <span className="text-base font-bold text-emerald-600">
-                    {formatCurrencyFull(item.total)}
-                  </span>
-                </div>
+              <div key={item.group} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+                <span className="text-xs font-semibold text-slate-600 whitespace-nowrap">{item.group}</span>
+                <span className="text-xs text-slate-400 whitespace-nowrap">
+                  Số HĐ <strong className="font-bold text-slate-700">{item.count}</strong>
+                </span>
+                <span className="text-xs text-slate-400 whitespace-nowrap">
+                  Tổng <strong className={`font-bold ${isContract ? 'text-blue-600' : 'text-emerald-600'}`}>{formatCurrencyFull(item.total)}</strong>
+                </span>
               </div>
             ))}
           </div>
@@ -183,7 +217,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
                         key === 'value' || key === 'contractDate' ? 'text-right' : ''
                       } ${
                         key === 'group'
-                          ? 'w-20'
+                          ? 'w-14'
                           : key === 'customer'
                             ? 'w-48'
                             : key === 'contractNo'
@@ -192,9 +226,11 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
                                 ? 'w-56'
                                 : key === 'value'
                                   ? 'w-28'
-                                  : key === 'contractDate'
-                                    ? 'w-24'
-                                    : ''
+: key === 'contractDate'
+                                  ? 'w-20'
+                                    : key === 'status'
+                                      ? 'w-20'
+                                      : ''
                       }`}
                     >
                       <button
@@ -202,7 +238,7 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
                         onClick={() => toggleSort(key)}
                         className="flex items-center gap-1 font-semibold text-slate-600 hover:text-slate-900"
                       >
-                        {columnLabels[key]}
+                        {expiryMode && key === 'contractDate' ? 'HẾT HẠN HĐ' : columnLabels[key]}
                         <span className="text-xs text-slate-400">{getSortIndicator(key)}</span>
                       </button>
                     </th>
@@ -224,11 +260,24 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
                             </option>
                           ))}
                         </select>
+                      ) : key === 'status' ? (
+                        <select
+                          value={columnFilters.status}
+                          onChange={(event) => handleFilterChange('status', event.target.value)}
+                          className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        >
+                          <option value="">Tất cả</option>
+                          {statusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           value={columnFilters[key as FilterKey]}
                           onChange={(event) => handleFilterChange(key as FilterKey, event.target.value)}
-                          placeholder={`Tìm ${columnLabels[key].toLowerCase()}`}
+                          placeholder={`Tìm ${(expiryMode && key === 'contractDate' ? 'hết hạn hđ' : columnLabels[key]).toLowerCase()}`}
                           className="h-8 w-full rounded-md border border-slate-200 px-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                         />
                       )}
@@ -239,19 +288,34 @@ const SignedContractList: React.FC<SignedContractListProps> = ({ rows, title, fi
               <tbody className="divide-y divide-slate-100 bg-white">
                 {sortedRows.map((row, index) => (
                   <tr key={`${row.contractNo}-${index}`} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-1.5 font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
-                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-48">
+                    <td className="px-4 py-0.5 text-xs font-medium text-slate-700 whitespace-nowrap">{row.group}</td>
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-normal break-words max-w-48">
                       {row.customer}
                     </td>
-                    <td className="px-4 py-1.5 text-slate-600 whitespace-nowrap">{row.contractNo}</td>
-                    <td className="px-4 py-1.5 text-slate-600 whitespace-normal break-words max-w-56">
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-nowrap">{row.contractNo}</td>
+                    <td className="px-4 py-0.5 text-xs text-slate-600 whitespace-normal break-words max-w-56">
                       {row.content}
                     </td>
-                    <td className="px-4 py-1.5 text-right font-semibold text-slate-700 whitespace-nowrap">
+                    <td className={`px-4 py-0.5 text-xs text-right font-semibold whitespace-nowrap ${isContract ? 'text-blue-600' : 'text-emerald-600'}`}>
                       {formatCurrencyFull(row.value)}
                     </td>
-                    <td className="px-4 py-1.5 text-right font-semibold text-slate-600 whitespace-nowrap">
-                      {formatDate(row.contractDate)}
+                    <td className="px-4 py-0.5 text-xs text-right whitespace-nowrap">
+                      {expiryMode ? (
+                        <span className={`inline-block rounded px-1.5 py-0.5 font-semibold tabular-nums ${getExpiryClass(row.contractDate)}`}>
+                          {formatDate(row.contractDate)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 tabular-nums">{formatDate(row.contractDate)}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-0.5 whitespace-nowrap">
+                      {row.status ? (
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${statusClass(row.status)}`}>
+                          {row.status}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}

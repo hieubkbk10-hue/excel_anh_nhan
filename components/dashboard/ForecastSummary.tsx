@@ -148,7 +148,7 @@ const ForecastSummary: React.FC<Props> = ({
       <div className="flex flex-col md:flex-row gap-4">
         <KPIBar label="Hợp đồng" plan={contractPlan}
           actual={computed.contractActual} forecast={computed.contractForecast}
-          color="#3b82f6" forecastColor="#818cf8" />
+          color="#3b82f6" forecastColor="#60a5fa" />
         <KPIBar label="Doanh thu" plan={revenuePlan}
           actual={computed.revenueActual} forecast={computed.revenueForecast}
           color="#10b981" forecastColor="#34d399" />
