@@ -341,12 +341,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
                         <tr key={row.label} className="border-b border-slate-50">
                           <td className="py-3 pr-3 whitespace-nowrap font-bold text-base text-slate-700">{row.label}</td>
                           <td className="py-3 pr-3 text-right whitespace-nowrap">
-                            <div className="text-2xl font-extrabold text-blue-600">{formatInBillions(row.value)}</div>
-                            <div className="text-sm font-semibold text-blue-400">{contractPct.toFixed(1)}%</div>
+                            <div className="text-3xl font-extrabold text-blue-600">{formatInBillions(row.value)}</div>
+                            <div className="text-base font-bold text-blue-400">{contractPct.toFixed(1)}%</div>
                           </td>
                           <td className="py-3 text-right whitespace-nowrap">
-                            <div className="text-2xl font-extrabold text-emerald-600">{formatInBillions(revenueRow.value)}</div>
-                            <div className="text-sm font-semibold text-emerald-400">{revenuePct.toFixed(1)}%</div>
+                            <div className="text-3xl font-extrabold text-emerald-600">{formatInBillions(revenueRow.value)}</div>
+                            <div className="text-base font-bold text-emerald-400">{revenuePct.toFixed(1)}%</div>
                           </td>
                         </tr>
                       );
