@@ -38,7 +38,7 @@ const KPICard: React.FC<KPICardProps> = ({
 
   return (
     <Card className="h-full border-none shadow-sm ring-1 ring-slate-200/50">
-      <CardHeader className="space-y-1 pb-2">
+      <CardHeader className="space-y-0 pb-2">
         <div className="flex items-center gap-3">
             <div className={cn("p-2 rounded-lg", bgClass, colorClass)}>
                 <IconComponent size={24} strokeWidth={2.5} />
@@ -47,15 +47,15 @@ const KPICard: React.FC<KPICardProps> = ({
                 {title}
             </CardTitle>
         </div>
-        <div className={cn("text-3xl font-bold leading-none", colorClass)}>
-            {formattedPercentage}%
-        </div>
       </CardHeader>
       <CardContent>
         <div className="mt-2 space-y-3">
           <div className="flex items-baseline gap-2">
             <span className={cn("text-4xl font-bold tracking-tight text-slate-800")}>
               {(currentValue / 1_000_000_000).toFixed(2)}
+            </span>
+            <span className={cn("text-2xl font-bold", colorClass)}>
+              {formattedPercentage}%
             </span>
           </div>
           <div className="flex items-center gap-2">
