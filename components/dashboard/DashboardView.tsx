@@ -353,10 +353,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
                     })}
                   </tbody>
                 </table>
-                <p className="mt-3 text-xs text-slate-400">
-                  Dự báo = Thực tế (HĐ {formatInBillions(forecastMetrics?.contractActual ?? 0)} | DT{' '}
-                  {formatInBillions(forecastMetrics?.revenueActual ?? 0)}) + Cơ hội tích lũy theo mức
-                </p>
               </CardContent>
             </Card>
           </div>
