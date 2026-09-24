@@ -14,6 +14,10 @@ import { EXCEL_LAYOUT_CONFIG } from '../../lib/excel-spec';
 import { buildRenderRows } from '../../lib/layout-order';
 import { DonutDataItem, ExcelChartId, ExcelData, GroupData, OpportunityChartItem } from '../../types';
 
+function parseMonth(s: string): number {
+  return parseInt(s.replace(/\D/g, ''), 10);
+}
+
 interface DashboardViewProps {
   excelData: ExcelData;
 }
@@ -153,7 +157,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         const level = parseLevel(r.priority);
         if (level == null) continue;
         const oppContract = r.contractValue;
-        const oppRevenue = r.dt1 + r.dt2 + r.dt3;
+        const inDt = (month: string, dt: number) => (parseMonth(month) >= 1 ? dt : 0);
+        const oppRevenue = inDt(r.dtMonth1, r.dt1) + inDt(r.dtMonth2, r.dt2) + inDt(r.dtMonth3, r.dt3);
         for (let t = level; t <= 3; t++) {
           cumContract[t] += oppContract;
           cumRevenue[t] += oppRevenue;
