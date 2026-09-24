@@ -9,7 +9,7 @@ import OpportunityRevenueList from './OpportunityRevenueList';
 import ForecastUntilMonth from './ForecastUntilMonth';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Clock } from 'lucide-react';
-import { formatCurrency, formatCurrencyFull } from '../../lib/utils';
+import { formatCurrency, formatCurrencyFull, formatInBillions, parseLevel } from '../../lib/utils';
 import { EXCEL_LAYOUT_CONFIG } from '../../lib/excel-spec';
 import { buildRenderRows } from '../../lib/layout-order';
 import { DonutDataItem, ExcelChartId, ExcelData, GroupData, OpportunityChartItem } from '../../types';
@@ -141,15 +141,30 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
 
     const forecastContractPlan = getMetric(forecastMetrics, 'contractPlan');
     const forecastRevenuePlan = getMetric(forecastMetrics, 'revenuePlan');
-    const contractForecast =
-      getMetric(forecastMetrics, 'contractActual') + getMetric(forecastMetrics, 'contractForecast');
-    const revenueForecast =
-      getMetric(forecastMetrics, 'revenueActual') +
-      getMetric(forecastMetrics, 'revenueSigned') +
-      getMetric(forecastMetrics, 'revenueNew');
-    const contractForecastPercent =
-      forecastContractPlan ? (contractForecast / forecastContractPlan) * 100 : 0;
-    const revenueForecastPercent = forecastRevenuePlan ? (revenueForecast / forecastRevenuePlan) * 100 : 0;
+
+    const contractActualForecast = getMetric(forecastMetrics, 'contractActual');
+    const revenueActualForecast = getMetric(forecastMetrics, 'revenueActual');
+
+    const buildForecastByLevel = () => {
+      const cumContract: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
+      const cumRevenue: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
+      for (const r of excelData.opportunitySources) {
+        const level = parseLevel(r.priority);
+        if (level == null) continue;
+        const oppContract = r.contractValue;
+        const oppRevenue = r.dt1 + r.dt2 + r.dt3;
+        for (let t = level; t <= 3; t++) {
+          cumContract[t] += oppContract;
+          cumRevenue[t] += oppRevenue;
+        }
+      }
+      const labels: Record<number, string> = { 1: 'Mức 1', 2: 'Mức 1+2', 3: 'Mức 1+2+3' };
+      return {
+        contract: [1, 2, 3].map((t) => ({ label: labels[t], value: contractActualForecast + cumContract[t] })),
+        revenue: [1, 2, 3].map((t) => ({ label: labels[t], value: revenueActualForecast + cumRevenue[t] }))
+      };
+    };
+    const forecastByLevel = buildForecastByLevel();
 
     return {
       headerMetrics,
@@ -186,10 +201,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       opportunityData,
       revenueInProgress,
       revenueInProgressByGroup,
-      contractForecast,
-      revenueForecast,
-      contractForecastPercent,
-      revenueForecastPercent,
+      contractForecastByLevel: forecastByLevel.contract,
+      revenueForecastByLevel: forecastByLevel.revenue,
       contractDonutTotal: getMetric(donutContractMetrics, 'total'),
       revenueSourceDonutTotal: getMetric(donutRevenueSourceMetrics, 'total'),
       revenueDonutTotal: rSignedDefault + rNewDefault,
@@ -235,10 +248,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [forecastMonths, setForecastMonths] = useState<number[]>([]);
 
-  const contractForecastPercent = derivedData.contractForecastPercent;
-  const revenueForecastPercent = derivedData.revenueForecastPercent;
-  const contractForecastPercentClamped = Math.min(contractForecastPercent, 100);
-  const revenueForecastPercentClamped = Math.min(revenueForecastPercent, 100);
   const latestUpdateText = `Cập nhật ngày ${new Date().toLocaleDateString('vi-VN')}`;
   const renderRows = buildRenderRows(EXCEL_LAYOUT_CONFIG);
   const rowLayoutClasses: Record<number, string> = {
@@ -299,59 +308,60 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
         />
       </div>
     ),
-    forecast: () => (
-      <div className="h-full">
-        <Card className="h-full border-none shadow-sm ring-1 ring-slate-200/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
-                <Clock size={24} strokeWidth={2.5} />
-              </div>
-              <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
-                {derivedData.forecastTitle}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-7">
-            <div className="space-y-3">
-              <div className="text-base font-medium text-slate-600">Hợp đồng dự kiến</div>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-slate-900">
-                    {(derivedData.contractForecast / 1_000_000_000).toFixed(2)}
-                  </span>
-                  <span className="text-lg text-slate-500 font-medium">tỷ</span>
+    forecast: () => {
+        const forecastMetrics = derivedData.forecastMetrics;
+        return (
+          <div className="h-full">
+            <Card className="h-full border-none shadow-sm ring-1 ring-slate-200/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                    <Clock size={24} strokeWidth={2.5} />
+                  </div>
+                  <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
+                    {derivedData.forecastTitle}
+                  </CardTitle>
                 </div>
-                <span className="text-3xl font-bold text-blue-600 bg-blue-50 px-3 py-0.5 rounded-full">
-                  {contractForecastPercent.toFixed(1)}%
-                </span>
-              </div>
-              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500" style={{ width: `${contractForecastPercentClamped}%` }}></div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="text-base font-medium text-slate-600">Doanh thu dự kiến</div>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-slate-900">
-                    {(derivedData.revenueForecast / 1_000_000_000).toFixed(2)}
-                  </span>
-                  <span className="text-lg text-slate-500 font-medium">tỷ</span>
-                </div>
-                <span className="text-3xl font-bold text-emerald-600 bg-emerald-50 px-3 py-0.5 rounded-full">
-                  {revenueForecastPercent.toFixed(1)}%
-                </span>
-              </div>
-              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500" style={{ width: `${revenueForecastPercentClamped}%` }}></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    ),
+              </CardHeader>
+              <CardContent className="pt-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs uppercase text-slate-400 border-b border-slate-100">
+                      <th className="pb-2 pr-2 font-medium">Mức độ</th>
+                      <th className="pb-2 pr-2 font-medium text-right">Hợp đồng</th>
+                      <th className="pb-2 font-medium text-right">Doanh thu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {derivedData.contractForecastByLevel.map((row, index) => {
+                      const revenueRow = derivedData.revenueForecastByLevel[index];
+                      const contractPct = (forecastMetrics?.contractPlan ?? 0) ? (row.value / (forecastMetrics?.contractPlan ?? 0)) * 100 : 0;
+                      const revenuePct = (forecastMetrics?.revenuePlan ?? 0) ? (revenueRow.value / (forecastMetrics?.revenuePlan ?? 0)) * 100 : 0;
+                      return (
+                        <tr key={row.label} className="border-b border-slate-50">
+                          <td className="py-2.5 pr-2 font-semibold text-slate-600">{row.label}</td>
+                          <td className="py-2.5 pr-2 text-right">
+                            <div className="font-bold text-blue-600">{formatInBillions(row.value)}</div>
+                            <div className="text-xs text-slate-400">{contractPct.toFixed(1)}% KH</div>
+                          </td>
+                          <td className="py-2.5 text-right">
+                            <div className="font-bold text-emerald-600">{formatInBillions(revenueRow.value)}</div>
+                            <div className="text-xs text-slate-400">{revenuePct.toFixed(1)}% KH</div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <p className="mt-3 text-xs text-slate-400">
+                  Dự báo = Thực tế (HĐ {formatInBillions(forecastMetrics?.contractActual ?? 0)} | DT{' '}
+                  {formatInBillions(forecastMetrics?.revenueActual ?? 0)}) + Cơ hội tích lũy theo mức
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      },
     'group-contract': () => (
       <GroupAnalysis title={derivedData.groupContractTitle} data={derivedData.contractGroupData} type="contract" />
     ),

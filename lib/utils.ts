@@ -31,6 +31,12 @@ export function formatInBillions(amount: number): string {
   }).format(value) + ' tỷ';
 }
 
+/** Trích số mức độ từ priority dạng "Mức 1: ..." */
+export function parseLevel(priority: string): number | null {
+  const match = priority.match(/Mức\s*(\d)/);
+  return match ? Number(match[1]) : null;
+}
+
 const GROUP_ORDER = ['ITO', 'UNI', 'G2B'];
 
 export function sortGroups(a: string, b: string): number {

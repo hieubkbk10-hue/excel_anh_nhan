@@ -1,17 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { OpportunitySourceRow } from '../../types';
-import { formatInBillions } from '../../lib/utils';
+import { formatInBillions, parseLevel } from '../../lib/utils';
 import GroupForecastChart from './GroupForecastChart';
 
 function parseMonth(s: string): number {
   return parseInt(s.replace(/\D/g, ''), 10);
-}
-
-/** Trích số mức độ từ priority dạng "Mức 1: ..." */
-function parseLevel(priority: string): number | null {
-  const match = priority.match(/Mức\s*(\d)/);
-  return match ? Number(match[1]) : null;
 }
 
 interface KPIForecastProps {
