@@ -251,7 +251,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
   const latestUpdateText = `Cập nhật ngày ${new Date().toLocaleDateString('vi-VN')}`;
   const renderRows = buildRenderRows(EXCEL_LAYOUT_CONFIG);
   const rowLayoutClasses: Record<number, string> = {
-    1: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
+    1: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr] gap-6',
     2: 'grid grid-cols-1 lg:grid-cols-2 gap-8',
     3: 'grid grid-cols-1 gap-8',
     4: 'grid grid-cols-1 lg:grid-cols-3 gap-8',
