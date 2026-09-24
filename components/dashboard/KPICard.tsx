@@ -51,7 +51,7 @@ const KPICard: React.FC<KPICardProps> = ({
       <CardContent>
         <div className="mt-2 space-y-3">
           <div className="flex items-baseline justify-between gap-2">
-            <span className={cn("text-4xl font-bold tracking-tight text-slate-800")}>
+            <span className={cn("text-5xl font-bold tracking-tight text-slate-800")}>
               {(currentValue / 1_000_000_000).toFixed(2)}
             </span>
             <span className={cn("text-4xl font-bold", colorClass)}>
