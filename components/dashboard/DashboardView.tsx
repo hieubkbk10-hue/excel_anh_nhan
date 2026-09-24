@@ -339,14 +339,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
                       const revenuePct = (forecastMetrics?.revenuePlan ?? 0) ? (revenueRow.value / (forecastMetrics?.revenuePlan ?? 0)) * 100 : 0;
                       return (
                         <tr key={row.label} className="border-b border-slate-50">
-                          <td className="py-2.5 pr-2 font-semibold text-slate-600">{row.label}</td>
-                          <td className="py-2.5 pr-2 text-right">
-                            <div className="font-bold text-blue-600">{formatInBillions(row.value)}</div>
-                            <div className="text-xs text-slate-400">{contractPct.toFixed(1)}%</div>
+                          <td className="py-3 pr-3 whitespace-nowrap font-bold text-base text-slate-700">{row.label}</td>
+                          <td className="py-3 pr-3 text-right whitespace-nowrap">
+                            <div className="text-2xl font-extrabold text-blue-600">{formatInBillions(row.value)}</div>
+                            <div className="text-sm font-semibold text-blue-400">{contractPct.toFixed(1)}%</div>
                           </td>
-                          <td className="py-2.5 text-right">
-                            <div className="font-bold text-emerald-600">{formatInBillions(revenueRow.value)}</div>
-                            <div className="text-xs text-slate-400">{revenuePct.toFixed(1)}%</div>
+                          <td className="py-3 text-right whitespace-nowrap">
+                            <div className="text-2xl font-extrabold text-emerald-600">{formatInBillions(revenueRow.value)}</div>
+                            <div className="text-sm font-semibold text-emerald-400">{revenuePct.toFixed(1)}%</div>
                           </td>
                         </tr>
                       );
