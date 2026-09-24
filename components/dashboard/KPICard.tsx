@@ -54,7 +54,7 @@ const KPICard: React.FC<KPICardProps> = ({
             <span className={cn("text-4xl font-bold tracking-tight text-slate-800")}>
               {(currentValue / 1_000_000_000).toFixed(2)}
             </span>
-            <span className={cn("text-3xl font-bold", colorClass)}>
+            <span className={cn("text-4xl font-bold", colorClass)}>
               {formattedPercentage}%
             </span>
           </div>
