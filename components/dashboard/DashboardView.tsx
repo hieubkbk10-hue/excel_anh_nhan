@@ -144,6 +144,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
 
     const contractActualForecast = getMetric(forecastMetrics, 'contractActual');
     const revenueActualForecast = getMetric(forecastMetrics, 'revenueActual');
+    const revenueSignedForecast = getMetric(forecastMetrics, 'revenueSigned');
 
     const buildForecastByLevel = () => {
       const cumContract: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
@@ -161,7 +162,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ excelData }) => {
       const labels: Record<number, string> = { 1: 'Mức 1', 2: 'Mức 1+2', 3: 'Mức 1+2+3' };
       return {
         contract: [1, 2, 3].map((t) => ({ label: labels[t], value: contractActualForecast + cumContract[t] })),
-        revenue: [1, 2, 3].map((t) => ({ label: labels[t], value: revenueActualForecast + cumRevenue[t] }))
+        revenue: [1, 2, 3].map((t) => ({ label: labels[t], value: revenueActualForecast + revenueSignedForecast + cumRevenue[t] }))
       };
     };
     const forecastByLevel = buildForecastByLevel();
